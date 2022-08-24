@@ -4,56 +4,86 @@ using UnityEngine;
 
 public class Legion : MonoBehaviour
 {
-    private GameObject player;
+    private PointManager pointScript;
     private Rigidbody rig;
+    private Transform pTf;
+    private Rigidbody pRb;
     private Vector3 velocity = new Vector3(0.0f, 0.0f, 0.0f);
     private Vector3 jumpForce = new Vector3(0.0f, 5.0f, 0.0f);
     private float speed = 10f;
     private float pDistance = 3.0f;
     private float lDistance = 1.5f;
 
-    public void Init(GameObject pl)
+    public enum Item
     {
+        none,
+        r,
+        normal,
+    };
+    Item itemType;
+
+    public void Init(GameObject p, Vector3 pos)
+    {
+        pTf = p.transform;
+        pRb = p.GetComponent<Rigidbody>();
+        pointScript = p.GetComponent<PointManager>();
         rig = this.GetComponent<Rigidbody>();
-        player = pl;
-        this.rig.position = player.GetComponent<Rigidbody>().position + new Vector3(0.0f, 0.0f, -4.0f);
+        rig.position = pos + new Vector3(0.0f, rig.position.y, -2.0f);
     }
 
     public void ManagedUpdate(Legion le)
     {
-        FollowPlayer();
-        Control();
-        AnotherLegion(le);
-
-        rig.position += velocity;
-        velocity = Vector3.zero;
+        FollowPoint();
     }
 
-    private void FollowPlayer()
+    private void FollowPoint()
     {
-        this.transform.LookAt(player.transform);
-
-        float pos1 = player.transform.position.x - rig.position.x;
-        float pos2 = player.transform.position.z - rig.position.z;
-        float dis = Mathf.Sqrt(pos1 * pos1 + pos2 * pos2);
-        if (dis > pDistance)
+        if (pointScript.GetMoveFlag())
         {
-            velocity += transform.forward * speed * Time.deltaTime;
-        }
-    }
+            float pos1 = pRb.position.x - rig.position.x;
+            float pos2 = pRb.position.z - rig.position.z;
+            float dis = Mathf.Sqrt(pos1 * pos1 + pos2 * pos2);
+            if (dis > pDistance)
+            {
+                velocity += transform.forward * speed * Time.deltaTime;
+            }
 
-    private void Control()
-    {
-        if (Input.GetMouseButtonDown(1))
+            rig.position += velocity;
+            velocity = Vector3.zero;
+
+            this.transform.LookAt(pTf);
+        }
+
+        if (pointScript.GetJumpFlag())
         {
             rig.AddForce(jumpForce, ForceMode.Impulse);
         }
     }
 
-    private void AnotherLegion(Legion le)
+    private void OnCollisionEnter(Collision col)
     {
-        if(le != null)
+        Transform cTf = col.transform;
+        if (cTf.tag == "NormalItem")
         {
+            itemType = Item.normal;
+            col.gameObject.SetActive(false);
         }
+
+        if(cTf.tag == "Ground")
+        {
+            if (pointScript != null)
+            {
+                pointScript.SetJumpFlag(false);
+            }
+        }
+    }
+
+    public Item FindItem()
+    {
+        return itemType;
+    }
+    public void SetItemType(Item type)
+    {
+        itemType = type;
     }
 }

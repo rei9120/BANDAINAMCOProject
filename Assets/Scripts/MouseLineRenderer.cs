@@ -9,7 +9,7 @@ public class MouseLineRenderer : MonoBehaviour
 	private Vector3[] arrayPos = { Vector3.zero, Vector3.zero, Vector3.zero, Vector3.zero, Vector3.zero };
 	private Vector3 startPos = Vector3.zero;
 	private Vector3 nextPos = Vector3.zero;
-	private Vector3 posCorr = new Vector3(0.0f, 0.0f, 0.0f);
+	private Vector3 beforePos = Vector3.zero;
 	private int linePosSize = 5;
 	private bool drawLineFlag = false;
 
@@ -46,29 +46,28 @@ public class MouseLineRenderer : MonoBehaviour
 	}
 
     // Update is called once per frame
-    public void ManagedUpdate()
+    public void ManagedUpdate(RaycastHit info)
     {
+		Debug.Log("startPos = " + startPos);
 		if (Input.GetMouseButton(0))
 		{
 			lineRenderer.positionCount = linePosSize;
-			Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-			RaycastHit hitInfo = new RaycastHit();
-			if (Physics.Raycast(ray, out hitInfo, Mathf.Infinity))
+
+			if (startPos == Vector3.zero)
 			{
-				if (startPos == Vector3.zero)
-				{
-					startPos = hitInfo.point + posCorr;
-				}
-				nextPos = hitInfo.point + posCorr;
-				nextPos.y = startPos.y;
-				drawLineFlag = false;
+				startPos = info.point;
 			}
+			nextPos = info.point;
+			nextPos.y = startPos.y;
+			drawLineFlag = false;
 		}
 		else
 		{
 			startPos = Vector3.zero;
 			drawLineFlag = true;
 		}
+
+		Debug.Log("nextPos = " + nextPos);
 
 		if (drawLineFlag)
 		{
@@ -83,30 +82,30 @@ public class MouseLineRenderer : MonoBehaviour
 			for (int i = 0; i < linePosSize; i++)
 			{
 				var clickPos = Vector3.zero;
-				clickPos = nextPos - startPos;
+				clickPos = nextPos;
 				clickPos.y = startPos.y;
-				switch (i)
-				{
-					case 1:
-						clickPos.z = 0;
-						break;
-					case 2:
-						break;
-					case 3:
-						clickPos.x = 0;
-						break;
-					case 4:
-						clickPos.x = 0;
-						clickPos.z = 0;
-						break;
-					default:
-						clickPos.x = 0;
-						clickPos.z = 0;
-						break;
-				}
+                switch (i)
+                {
+                    case 1:
+                        clickPos.z = startPos.z;
+                        break;
+                    case 2:
+                        break;
+                    case 3:
+                        clickPos.x = startPos.x;
+                        break;
+                    case 4:
+                        clickPos.x = startPos.x;
+                        clickPos.z = startPos.y;
+                        break;
+                    default:
+                        clickPos.x = startPos.x;
+                        clickPos.z = startPos.y;
+                        break;
+                }
 
-				// 追加した頂点の座標を設定
-				this.lineRenderer.SetPosition(i, clickPos);
+                // 追加した頂点の座標を設定
+                this.lineRenderer.SetPosition(i, clickPos);
 				arrayPos[i] = clickPos;
 			}
 		}

@@ -4,37 +4,43 @@ using UnityEngine;
 
 public class CameraManager : MonoBehaviour
 {
-    private GameObject player;
-    private Rigidbody playerRig;
+    private Legion obj;
+    private Rigidbody objRb;
     private Transform tf;
     private Vector3 pos;
     private Vector3 distance;
 
-    public void Init(GameObject pl)
+    public void Init(Legion gameObj)
     {
-        player = pl;
-        if(player != null)
+        obj = gameObj;
+        if(obj != null)
         {
-            playerRig = player.GetComponent<Rigidbody>();
+            objRb = obj.GetComponent<Rigidbody>();
         }
         tf = this.transform;
         distance = tf.position;
         pos = tf.position;
     }
 
-    public void ManagedUpdate()
+    public void ManagedUpdate(Legion gameObj)
     {
-        if (player != null)
+        if(obj != gameObj && gameObj != null)
         {
-            FollowPlayer();
+            obj = gameObj;
+            objRb = obj.GetComponent<Rigidbody>();
+        }
+
+        if (obj != null)
+        {
+            FollowTarget();
         }
     }
 
-    private void FollowPlayer()
+    private void FollowTarget()
     {
-        if (player != null)
+        if (obj != null)
         {
-            tf.position = pos + playerRig.position;
+            tf.position = pos + objRb.position;
         }
     }
 }
