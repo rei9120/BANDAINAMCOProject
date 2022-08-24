@@ -5,24 +5,44 @@ using UnityEngine;
 public class LegionManager : MonoBehaviour
 {
     [SerializeField] private GameObject legionPrefab;
+    private GameObject point;
     private List<Legion> legion;
 
-    public void Init()
+    public void Init(GameObject p)
     {
+        point = p;
         legion = new List<Legion>();
+        CreateLegion(1);
     }
 
-    public void CreateLegion(GameObject pl)
+    public void CreateLegion(int num)
     {
-        GameObject obj = Instantiate(legionPrefab);
-        legion.Add(obj.GetComponent<Legion>());
-        legion[legion.Count - 1].Init(pl);
+        for (int i = 0; i < num; i++)
+        {
+            GameObject obj = Instantiate(legionPrefab);
+            legion.Add(obj.GetComponent<Legion>());
+            if (legion.Count == 1)
+            {
+                legion[legion.Count - 1].Init(point, point.transform.position);
+            }
+            else
+            {
+                legion[legion.Count - 1].Init(point, legion[legion.Count - 2].transform.position);
+            }
+        }
     }
 
     public void ManagedUpdate()
     {
-        for(int i = 0; i < legion.Count; i++)
+        for (int i = 0; i < legion.Count; i++)
         {
+            int num = (int)legion[i].FindItem();
+            if (num > 0)
+            {
+                CreateLegion(num);
+                legion[i].SetItemType(Legion.Item.none);
+            }
+
             if (legion[i] != null)
             {
                 if (i - 1 >= 0)
@@ -35,5 +55,10 @@ public class LegionManager : MonoBehaviour
                 }
             }
         }
+    }
+
+    public Legion GetLegionPtr()
+    {
+        return legion[0];
     }
 }

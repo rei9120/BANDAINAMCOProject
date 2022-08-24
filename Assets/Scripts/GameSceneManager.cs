@@ -3,41 +3,39 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+[DefaultExecutionOrder(-1)]
 public class GameSceneManager : MonoBehaviour
 {
-    [SerializeField] private GameObject gameCamera;
-    [SerializeField] private GameObject playerManager;
-    [SerializeField] private GameObject legionManager;
-    [SerializeField] private GameObject lineRenderer;
     [SerializeField] private GameObject point;
-    private PlayerManager playerScript;
+    [SerializeField] private GameObject legionManager;
+    [SerializeField] private GameObject gameCamera;
+    [SerializeField] private GameObject lineRenderer;
+    private PointManager pointScript;
     private LegionManager legionScript;
     private CameraManager cameraScript;
     private MouseLineRenderer mouseLineScript;
-    private PointManager pointScript;
+
+    private RaycastHit hitInfo;
 
     private void Start()
     {
         pointScript = point.GetComponent<PointManager>();
+        legionScript = legionManager.GetComponent<LegionManager>();
         cameraScript = gameCamera.GetComponent<CameraManager>();
         mouseLineScript = lineRenderer.GetComponent<MouseLineRenderer>();
-        playerScript = playerManager.GetComponent<PlayerManager>();
-        legionScript = legionManager.GetComponent<LegionManager>();
         pointScript.Init();
-        playerScript.Init();
-        legionScript.Init();
-        cameraScript.Init(playerScript.GetPlayerPtr());
+        legionScript.Init(point);
+        cameraScript.Init(legionScript.GetLegionPtr());
         mouseLineScript.Init();
     }
 
     // Update is called once per frame
-    void Update()
+    private void Update()
     {
-        pointScript.ManagedUpdate();
-        cameraScript.ManagedUpdate();
-        mouseLineScript.ManagedUpdate();
-        playerScript.ManagedUpdate();
+        hitInfo = pointScript.ManagedUpdate();
         legionScript.ManagedUpdate();
+        cameraScript.ManagedUpdate(legionScript.GetLegionPtr());
+        mouseLineScript.ManagedUpdate(hitInfo);
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
