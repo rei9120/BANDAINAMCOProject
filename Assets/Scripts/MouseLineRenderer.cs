@@ -87,7 +87,7 @@ public class MouseLineRenderer : MonoBehaviour
                 switch (i)
                 {
                     case 1:
-                        clickPos.z = startPos.z;
+                        clickPos.z = startPos.y;
                         break;
                     case 2:
                         break;
@@ -110,4 +110,33 @@ public class MouseLineRenderer : MonoBehaviour
 			}
 		}
 	}
+
+	public Vector3 GetStartLinePos()
+	{
+		if(arrayPos[0].x < arrayPos[2].x)
+        {
+			return arrayPos[0];
+        }
+		else
+        {
+			return arrayPos[2];
+        }
+	}
+
+	public Vector3 GetEndLinePos()
+    {
+		if (arrayPos[0].x < arrayPos[2].x)
+		{
+			return arrayPos[2];
+		}
+		else
+		{
+			return arrayPos[0];
+		}
+	}
+
+	public bool GetDrawLineFlag()
+    {
+		return drawLineFlag;
+    }
 }

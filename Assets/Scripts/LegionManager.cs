@@ -5,6 +5,7 @@ using UnityEngine;
 public class LegionManager : MonoBehaviour
 {
     [SerializeField] private GameObject legionPrefab;
+    [SerializeField] private MouseLineRenderer lineScript;
     private GameObject point;
     private List<Legion> legion;
 
@@ -23,11 +24,11 @@ public class LegionManager : MonoBehaviour
             legion.Add(obj.GetComponent<Legion>());
             if (legion.Count == 1)
             {
-                legion[legion.Count - 1].Init(point, point.transform.position);
+                legion[legion.Count - 1].Init(point, lineScript, point.transform.position);
             }
             else
             {
-                legion[legion.Count - 1].Init(point, legion[legion.Count - 2].transform.position);
+                legion[legion.Count - 1].Init(point, lineScript, legion[legion.Count - 2].transform.position);
             }
         }
     }
