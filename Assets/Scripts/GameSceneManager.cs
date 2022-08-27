@@ -24,7 +24,7 @@ public class GameSceneManager : MonoBehaviour
         cameraScript = gameCamera.GetComponent<CameraManager>();
         mouseLineScript = lineRenderer.GetComponent<MouseLineRenderer>();
         pointScript.Init();
-        legionScript.Init(point);
+        legionScript.Init(point, lineRenderer);
         cameraScript.Init(legionScript.GetLegionPtr());
         mouseLineScript.Init();
     }

@@ -5,13 +5,14 @@ using UnityEngine;
 public class LegionManager : MonoBehaviour
 {
     [SerializeField] private GameObject legionPrefab;
-    [SerializeField] private MouseLineRenderer lineScript;
+    private MouseLineRenderer lineScript;
     private GameObject point;
     private List<Legion> legion;
 
-    public void Init(GameObject p)
+    public void Init(GameObject p, GameObject l)
     {
         point = p;
+        lineScript = l.GetComponent<MouseLineRenderer>();
         legion = new List<Legion>();
         CreateLegion(1);
     }

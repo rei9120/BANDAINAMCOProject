@@ -9,12 +9,14 @@ public class Legion : MonoBehaviour
     private Rigidbody rig;
     private Transform pTf;
     private Rigidbody pRb;
-    private Vector3 velocity = new Vector3(0.0f, 0.0f, 0.0f);
-    private Vector3 lineVelocity = new Vector3(0.0f, 0.0f, 0.0f);
+    private Vector3 velocity = Vector3.zero;
+    private Vector3 lineVelocity = Vector3.zero;
     private Vector3 jumpForce = new Vector3(0.0f, 5.0f, 0.0f);
     private float speed = 10f;
     private float pDistance = 3.0f;
-    private float lDistance = 1.5f;
+    private float lDistance = 0.5f;
+    private float tDistance = 0.5f;
+    private bool legionFlag = false;
 
     public enum Item
     {
@@ -38,22 +40,22 @@ public class Legion : MonoBehaviour
     {
         FollowPoint();
         LineFormation(le);
+
+        rig.position += velocity + lineVelocity;
     }
 
     private void FollowPoint()
     {
-        if (pointScript.GetMoveFlag())
+        velocity = Vector3.zero;
+        if (pointScript.GetMoveFlag() && !legionFlag)
         {
             float pos1 = pRb.position.x - rig.position.x;
             float pos2 = pRb.position.z - rig.position.z;
             float dis = Mathf.Sqrt(pos1 * pos1 + pos2 * pos2);
             if (dis > pDistance)
             {
-                velocity += transform.forward * speed * Time.deltaTime;
+                velocity = transform.forward * speed * Time.deltaTime;
             }
-
-            rig.position += velocity;
-            velocity = Vector3.zero;
 
             this.transform.LookAt(pTf);
         }
@@ -66,48 +68,65 @@ public class Legion : MonoBehaviour
 
     private void LineFormation(Legion le)
     {
-        Vector3 pos = rig.position;
-        Vector3 lePos = le.transform.position;
-        Vector3 sPos = lineScript.GetStartLinePos();
-        Vector3 ePos = lineScript.GetEndLinePos();
+        lineVelocity = Vector3.zero;
+        // ë‡óÒÇ∑ÇÈîÕàÕê¸Ç™à¯Ç©ÇÍÇΩÇÁ
+        if (lineScript.GetSetLineFlag())
+        {
+            legionFlag = true;
+            Vector3 pos = rig.position;
+            Vector3 lePos = Vector3.zero;
+            if (le != null)
+            {
+                lePos = le.transform.position;
+            }
+            Vector3 sPos = lineScript.GetStartLinePos();
+            Vector3 ePos = lineScript.GetEndLinePos();
 
-        if(sPos.x <= pos.x && ePos.x >= pos.x)
-        {
-            MoveInLine(pos, lePos, sPos, ePos);
-        }
-        else
-        {
-            MoveOutLine(pos, sPos);
+            // îÕàÕê¸ÇÃíÜÇæÇ¡ÇΩÇÁ
+            if (sPos.x <= pos.x && ePos.x >= pos.x)
+            {
+                MoveInLine(pos, lePos, sPos, ePos);
+            }
+            else  // îÕàÕê¸ÇÃäOÇæÇ¡ÇΩÇÁ
+            {
+                // îÕàÕÇÃê^ÇÒíÜÇìæÇÈ
+                Vector3 dPos = Vector3.zero;
+                Vector3 tPos = Vector3.Lerp(sPos, ePos, 0.5f);
+                dPos.y = sPos.y;
+                dPos.x = tPos.x;
+                dPos.z = tPos.z;
+
+                MoveOutLine(pos, dPos);
+            }
         }
     }
 
     private void MoveInLine(Vector3 pos, Vector3 lePos, Vector3 sPos, Vector3 ePos)
     {
+        if(lePos == Vector3.zero && legionFlag)
+        {
+            Vector3 targetPos = new Vector3(MinValue(sPos.x, ePos.x), pos.y, MaxValue(sPos.z, ePos.z));
+            this.transform.LookAt(targetPos);
+            lineVelocity = transform.forward * speed * Time.deltaTime;
+            legionFlag = false;
+        }
+        else if(legionFlag)
+        {
 
+        }
     }
 
-    private void MoveOutLine(Vector3 pos, Vector3 sPos)
+    private void MoveOutLine(Vector3 pos, Vector3 dPos)
     {
-        float pos1 = sPos.x - pos.x;
-        float pos2 = sPos.z - pos.z;
-        float divideSpeed = 2.0f;
+        float pos1 = dPos.x - pos.x;
+        float pos2 = dPos.z - pos.z;
+        float distance = Mathf.Sqrt(pos1 * pos1 + pos2 * pos2);
 
-        if(pos1 < 0)
-        {
-            lineVelocity.x = -1 * speed / divideSpeed * Time.deltaTime;
-        }
-        else
-        {
-            lineVelocity.x = speed / divideSpeed * Time.deltaTime;
-        }
+        this.transform.LookAt(dPos);
 
-        if(pos2 < 0)
+        if(distance > 0)
         {
-            lineVelocity.z = -1 * speed / divideSpeed * Time.deltaTime;
-        }
-        else
-        {
-            lineVelocity.z = speed / divideSpeed * Time.deltaTime;
+            lineVelocity = transform.forward * speed * Time.deltaTime;
         }
     }
 
@@ -136,5 +155,115 @@ public class Legion : MonoBehaviour
     public void SetItemType(Item type)
     {
         itemType = type;
+    }
+
+    private Vector3 AddVector(Vector3 pos1, Vector3 pos2)
+    {
+        float maxX = MaxValue(pos1.x, pos2.x);
+        float minX = MinValue(pos1.x, pos2.x);
+        float maxZ = MaxValue(pos1.z, pos2.z);
+        float minZ = MinValue(pos1.z, pos2.z);
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+
+        if (maxX > 0 && minX < 0 || maxX < 0 && minX > 0)
+        {
+            x = (float)maxX - (float)minX;
+        }
+        else
+        {
+            x = (float)minX + (float)maxX;
+        }
+
+        if (maxZ > 0 && minZ < 0 || maxZ < 0 && minZ > 0)
+        {
+            z = (float)maxZ - (float)minZ;
+        }
+        else
+        {
+            z = (float)minZ + (float)minZ;
+        }
+
+        y = (float)pos1.y;
+
+        Vector3 pos = new Vector3(x, y, z);
+        return pos;
+    }
+
+    private float MaxValue(float value1, float value2)
+    {
+        float tmp1 = value1;
+        float tmp2 = value2;
+
+        if (tmp1 < 0.0f)
+        {
+            tmp1 = -1 * tmp1;
+        }
+        if (tmp2 < 0.0f)
+        {
+            tmp2 = -1 * tmp2;
+        }
+
+        if (tmp1 > tmp2)
+        {
+            if (value1 > 0)
+            {
+                return value1;
+            }
+            else
+            {
+                return value2;
+            }
+        }
+        else
+        {
+            if (value2 > 0)
+            {
+                return value2;
+            }
+            else
+            {
+                return value1;
+            }
+        }
+    }
+
+    private float MinValue(float value1, float value2)
+    {
+        float tmp1 = value1;
+        float tmp2 = value2;
+
+        if (tmp1 < 0.0f)
+        {
+            tmp1 = -1 * tmp1;
+        }
+        if (tmp2 < 0.0f)
+        {
+            tmp2 = -1 * tmp2;
+        }
+
+        if (tmp1 > tmp2)
+        {
+            if (value1 > 0)
+            {
+                return value2;
+            }
+            else
+            {
+                return value1;
+            }
+        }
+        else
+        {
+            if (value2 > 0)
+            {
+                return value1;
+            }
+            else
+            {
+                return value2;
+            }
+        }
     }
 }

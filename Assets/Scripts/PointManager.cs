@@ -5,6 +5,7 @@ using UnityEngine;
 public class PointManager : MonoBehaviour
 {
     [SerializeField] private LegionManager legionScript;
+    [SerializeField] private GameObject point;
     private Transform tf;
     private int pressButtonCount = 0;
     private const int longPressCount = 70;
@@ -64,11 +65,6 @@ public class PointManager : MonoBehaviour
             {
                 moveFlag = true;
             }
-
-            if (buttonType == Mouse.LongLeft)
-            {
-                moveFlag = false;
-            }
         }
 
         if (buttonType == Mouse.Right && !jumpFlag)
@@ -106,6 +102,10 @@ public class PointManager : MonoBehaviour
                     if (pressButtonCount > longPressCount)
                     {
                         buttonType = Mouse.LongLeft;
+                        if(moveFlag)
+                        {
+                            moveFlag = false;
+                        }
                     }
                     break;
                 case Mouse.Right:
