@@ -51,12 +51,77 @@ public class PointManager : MonoBehaviour
         return hitInfo;
     }
 
+    // プレイヤーが操作する処理
     private void Control()
     {
         buttonType = CheckMouseButton();
+    }
 
-        if (buttonType == Mouse.Left)
+    private Mouse CheckMouseButton()
+    {
+        Mouse type = Mouse.None;
+        // 左のボタンをクリックしたら
+        if (Input.GetMouseButton(0))
         {
+            type = Mouse.Left;
+        }
+        // 右のボタンをクリックしたら
+        else if(Input.GetMouseButton(1))
+        {
+            type = Mouse.Right;
+        }
+        // 真ん中のボタンをクリックしたら
+        else if(Input.GetMouseButton(2))
+        {
+            type = Mouse.Middle;
+        }
+
+        // 押されたボタンが前回と違うか、何も押されなかったら
+        if (buttonType != type && buttonType == Mouse.None)
+        {
+            pressButtonCount = 0;
+        }
+        else  // そうじゃなかったら
+        {
+            pressButtonCount++;
+            // 押されたボタンによる状態遷移
+            switch (buttonType)
+            {
+                // 左だったら
+                case Mouse.Left:
+                    LeftMouseButton();
+                    break;
+                // 右だったら
+                case Mouse.Right:
+                    RightMouseButton();
+                    break;
+                // 真ん中だったら
+                case Mouse.Middle:
+                    MiddleMouseButton();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        return type;
+    }
+
+    private void LeftMouseButton()
+    {
+        // 長押しなら
+        if (pressButtonCount > longPressCount)
+        {
+            buttonType = Mouse.LongLeft;
+            // キャラクターの動きを止める
+            if (moveFlag)
+            {
+                moveFlag = false;
+            }
+        }
+        else
+        {
+            // キャラクターの動かすかどうかを変える
             if (moveFlag)
             {
                 moveFlag = false;
@@ -66,66 +131,32 @@ public class PointManager : MonoBehaviour
                 moveFlag = true;
             }
         }
-
-        if (buttonType == Mouse.Right && !jumpFlag)
-        {
-            jumpFlag = true;
-        }
     }
 
-    private Mouse CheckMouseButton()
+    private void RightMouseButton()
     {
-        Mouse type = Mouse.None;
-        if (Input.GetMouseButton(0))
+        // 長押しなら
+        if (pressButtonCount > longPressCount)
         {
-            type = Mouse.Left;
-        }
-        else if(Input.GetMouseButton(1))
-        {
-            type = Mouse.Right;
-        }
-        else if(Input.GetMouseButton(2))
-        {
-            type = Mouse.Middle;
-        }
-
-        if (buttonType != type && buttonType == Mouse.None)
-        {
-            pressButtonCount = 0;
+            buttonType = Mouse.LongRight;
         }
         else
         {
-            pressButtonCount++;
-            switch (buttonType)
+            // キャラクターをジャンプさせる
+            if (buttonType == Mouse.Right && !jumpFlag)
             {
-                case Mouse.Left:
-                    if (pressButtonCount > longPressCount)
-                    {
-                        buttonType = Mouse.LongLeft;
-                        if(moveFlag)
-                        {
-                            moveFlag = false;
-                        }
-                    }
-                    break;
-                case Mouse.Right:
-                    if (pressButtonCount > longPressCount)
-                    {
-                        buttonType = Mouse.LongRight;
-                    }
-                    break;
-                case Mouse.Middle:
-                    if (pressButtonCount > longPressCount)
-                    {
-                        buttonType = Mouse.LongMiddle;
-                    }
-                    break;
-                default:
-                    break;
+                jumpFlag = true;
             }
         }
+    }
 
-        return type;
+    private void MiddleMouseButton()
+    {
+        // 長押しなら
+        if (pressButtonCount > longPressCount)
+        {
+            buttonType = Mouse.LongMiddle;
+        }
     }
 
     public bool GetMoveFlag()

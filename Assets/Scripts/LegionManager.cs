@@ -7,12 +7,14 @@ public class LegionManager : MonoBehaviour
     [SerializeField] private GameObject legionPrefab;
     private MouseLineRenderer lineScript;
     private GameObject point;
+    private GameObject lineRenderer;
     private List<Legion> legion;
 
     public void Init(GameObject p, GameObject l)
     {
         point = p;
-        lineScript = l.GetComponent<MouseLineRenderer>();
+        lineRenderer = l;
+        lineScript = lineRenderer.GetComponent<MouseLineRenderer>();
         legion = new List<Legion>();
         CreateLegion(1);
     }
@@ -25,11 +27,11 @@ public class LegionManager : MonoBehaviour
             legion.Add(obj.GetComponent<Legion>());
             if (legion.Count == 1)
             {
-                legion[legion.Count - 1].Init(point, lineScript, point.transform.position);
+                legion[legion.Count - 1].Init(point, lineRenderer, point.transform.position);
             }
             else
             {
-                legion[legion.Count - 1].Init(point, lineScript, legion[legion.Count - 2].transform.position);
+                legion[legion.Count - 1].Init(point, lineRenderer, legion[legion.Count - 2].transform.position);
             }
         }
     }

@@ -6,15 +6,20 @@ public class MouseLineRenderer : MonoBehaviour
 {
     [SerializeField] private LineRenderer lineRenderer;
 	[SerializeField] private Material lineMaterial;
+	private PointManager pointScript;
+	private Transform tf;
+	private Transform pTf;
 	private Vector3[] arrayPos = { Vector3.zero, Vector3.zero, Vector3.zero, Vector3.zero, Vector3.zero };
 	private Vector3 startPos = Vector3.zero;
-	private Vector3 tmpPos = Vector3.zero;
 	private Vector3 nextPos = Vector3.zero;
+	private Vector3 velocity = Vector3.zero;
 	private const float lineDistance = 1.0f;
 	private float distance = 0.0f;
+	private float speed = 10f;
 	private int linePosSize = 5;
 	private bool drawStartFlag = false;
 	private bool setLineFlag = false;
+	private bool moveFlag = false;
 
 	private int debugCount = 0;
 
@@ -25,7 +30,7 @@ public class MouseLineRenderer : MonoBehaviour
     }
 	private Line lineType = Line.None;
 
-    public void Init()
+    public void Init(GameObject p)
     {
 		if (lineRenderer != null)
 		{
@@ -55,13 +60,26 @@ public class MouseLineRenderer : MonoBehaviour
 			lineRenderer.startWidth = 0.1f;
 			lineRenderer.endWidth = 0.1f;
 		}
+		pTf = p.transform;
+		pointScript = p.GetComponent<PointManager>();
+		tf = this.transform;
 	}
 
     // Update is called once per frame
     public void ManagedUpdate(RaycastHit info)
     {
-		Debug.Log("startPos = " + startPos);
+		CreateLine(info);
 
+		DrawLine();
+
+		Debug.Log("startPos = " + startPos);
+		Debug.Log("nextPos = " + nextPos);
+	}
+
+	// ラインを作る処理
+	private void CreateLine(RaycastHit info)
+    {
+		// 真ん中のボタンをクリックで、引いたラインを消す処理(ラインが細すぎた場合も)
 		if (Input.GetMouseButtonDown(2) || distance < lineDistance && setLineFlag)
 		{
 			setLineFlag = false;
@@ -73,74 +91,91 @@ public class MouseLineRenderer : MonoBehaviour
 			}
 		}
 
-		if (Input.GetMouseButton(0))
+		// 左のボタンをクリックで、ラインを引く
+		if (Input.GetMouseButton(0) && !setLineFlag)
 		{
+			// 四角を描くために必要な頂点を代入する
 			lineRenderer.positionCount = linePosSize;
 			debugCount++;
 
+			// 引き始めだったら
 			if (!drawStartFlag)
 			{
 				startPos = info.point;
 				drawStartFlag = true;
 			}
 			nextPos = info.point;
-			nextPos.y = startPos.y;
+			nextPos.y = startPos.y;  // 高さは変えない
 			lineType = Line.Draw;
-			setLineFlag = false;
+			setLineFlag = false;  // まだラインを保存しない
 		}
-		else
+		else  // 左が押されていなかったら
 		{
+			// ラインを引く処理を行っていたら
 			if (lineType == Line.Draw)
 			{
-				setLineFlag = true;
+				setLineFlag = true;  // その状態のラインを保存する
 			}
 			distance = DifferenceWidthVector(arrayPos[0], arrayPos[2]).x;
 			lineType = Line.None;
 			startPos = Vector3.zero;
-			drawStartFlag = false;
+			drawStartFlag = false;  // 引き始めに変更
 		}
+	}
 
-		Debug.Log("nextPos = " + nextPos);
-		Debug.Log("tmpPos = " + tmpPos);
-
+	// ラインを引く処理
+	private void DrawLine()
+    {
+		// 作ったラインを引き続ける
 		if (lineType == Line.None && setLineFlag)
 		{
+			moveFlag = pointScript.GetMoveFlag();
 			for (int i = 0; i < linePosSize; i++)
 			{
 				// 追加した頂点の座標を設定
 				this.lineRenderer.SetPosition(i, arrayPos[i]);
+				if (moveFlag)
+				{
+					velocity = arrayPos[i] + tf.forward * speed * Time.deltaTime;
+				}
 			}
+			Vector3 tPos = Vector3.Lerp(arrayPos[0], arrayPos[2], 0.5f);
+			tPos.y = startPos.y;
+			tf.position = tPos;
+			tf.LookAt(pTf);
 		}
 
-		if(lineType == Line.Draw)
+		// 作っているラインを可視化する
+		if (lineType == Line.Draw)
 		{
 			for (int i = 0; i < linePosSize; i++)
 			{
-                var clickPos = Vector3.zero;
-                clickPos = nextPos;
+				var clickPos = Vector3.zero;
+				clickPos = nextPos;
 				clickPos.y = startPos.y;
-                switch (i)
-                {
-                    case 1:
-                        clickPos.z = startPos.z;
-                        break;
-                    case 2:
-                        break;
-                    case 3:
-                        clickPos.x = startPos.x;
-                        break;
-                    case 4:
-                        clickPos.x = startPos.x;
-                        clickPos.z = startPos.z;
-                        break;
-                    default:
-                        clickPos.x = startPos.x;
-                        clickPos.z = startPos.z;
-                        break;
-                }
+				// 四角になるラインにする
+				switch (i)
+				{
+					case 1:
+						clickPos.z = startPos.z;
+						break;
+					case 2:
+						break;
+					case 3:
+						clickPos.x = startPos.x;
+						break;
+					case 4:
+						clickPos.x = startPos.x;
+						clickPos.z = startPos.z;
+						break;
+					default:
+						clickPos.x = startPos.x;
+						clickPos.z = startPos.z;
+						break;
+				}
 
-                // 追加した頂点の座標を設定
-                this.lineRenderer.SetPosition(i, clickPos);
+				// 追加した頂点の座標を設定
+				this.lineRenderer.SetPosition(i, clickPos);
 				arrayPos[i] = clickPos;
 			}
 		}
