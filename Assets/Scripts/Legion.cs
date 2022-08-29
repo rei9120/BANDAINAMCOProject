@@ -17,9 +17,10 @@ public class Legion : MonoBehaviour
     private Vector3 jumpForce = new Vector3(0.0f, 5.0f, 0.0f);
     private float speed = 10f;
     private float pDistance = 3.0f;
-    private float lDistance = 3f;
-    private float tDistance = 0.5f;
-    private float arrivalDistance = 0.5f;
+    private float lWidthDistance = 1.5f;
+    private float lHeightDistance = 3f;
+    private float tWidthDistance = 0.3f;
+    private float tHeightDistance = 0.3f;
     private bool moveFlag = false;
     private bool jumpFlag = false;
     private bool setLineFlag = false;
@@ -49,24 +50,43 @@ public class Legion : MonoBehaviour
 
     public void ManagedUpdate(Legion le)
     {
-        moveFlag = false;
-        jumpFlag = false;
-        setLineFlag = false;
-        moveFlag = pointScript.GetMoveFlag();
-        jumpFlag = pointScript.GetJumpFlag();
-        setLineFlag = lineScript.GetSetLineFlag();
-        FollowPoint();
-        LineFormation(le);
-        FollowLine();
+        // 必要な値を更新または初期化する
+        UpdateValue();
+
+        // ラインについていく
+        if (followLineFlag)
+        {
+            FollowLine();
+        }
+        else
+        {
+            // ラインの中で隊列する
+            if(setLineFlag)
+            {
+                LineFormation(le);
+            }
+            // プレイヤーについていく
+            else
+            {
+                FollowPoint();
+            }
+        }
+
+        if (jumpFlag)
+        {
+            rig.AddForce(jumpForce, ForceMode.Impulse);
+        }
 
         rig.position += velocity + lineVelocity;
+
+        Debug.Log("setLineFlag = " + setLineFlag);
+        Debug.Log("followLineFlag = " + followLineFlag);
     }
 
     // プレイヤーについていく処理
     private void FollowPoint()
     {
-        velocity = Vector3.zero;
-        if (moveFlag && !legionFlag)
+        if (moveFlag)
         {
             float pos1 = pRb.position.x - rig.position.x;
             float pos2 = pRb.position.z - rig.position.z;
@@ -75,38 +95,28 @@ public class Legion : MonoBehaviour
             {
                 velocity = tf.forward * speed * Time.deltaTime;
             }
-
-            tf.LookAt(pTf);
         }
-
-        if (jumpFlag)
-        {
-            rig.AddForce(jumpForce, ForceMode.Impulse);
-        }
+        tf.LookAt(pTf);
     }
 
     private void FollowLine()
     {
-        if(followLineFlag)
+        tf.LookAt(pTf);
+        if (moveFlag)
         {
-            tf.LookAt(pTf);
-            if (moveFlag)
-            {
-                Vector3 sPos = lineScript.GetStartLinePos();
-                Vector3 ePos = lineScript.GetEndLinePos();
-                Vector3 tPos = Vector3.Lerp(sPos, ePos, 0.5f);
-                tPos.y = sPos.y;
+            Vector3 sPos = lineScript.GetStartLinePos();
+            Vector3 ePos = lineScript.GetEndLinePos();
+            Vector3 tPos = Vector3.Lerp(sPos, ePos, 0.5f);
+            tPos.y = sPos.y;
 
-                tf.localRotation = lTf.localRotation;
-                velocity = tf.forward * speed * Time.deltaTime;
-            }
+            tf.localRotation = lTf.localRotation;
+            velocity = tf.forward * speed * Time.deltaTime;
         }
     }
 
     // 隊列する処理
     private void LineFormation(Legion le)
     {
-        lineVelocity = Vector3.zero;
         // 隊列する範囲線が引かれたら
         if (setLineFlag)
         {
@@ -121,20 +131,27 @@ public class Legion : MonoBehaviour
             Vector3 ePos = lineScript.GetEndLinePos();
 
             // 範囲線の中だったら
-            if (sPos.x <= pos.x && ePos.x >= pos.x)
+            if (le == null)
             {
-                MoveInLine(pos, lePos, sPos, ePos);
-            }
-            else  // 範囲線の外だったら
-            {
-                // 範囲の真ん中を得る
-                Vector3 dPos = Vector3.zero;
-                Vector3 tPos = Vector3.Lerp(sPos, ePos, 0.5f);
-                dPos.y = sPos.y;
-                dPos.x = tPos.x;
-                dPos.z = tPos.z;
+                if (sPos.x <= pos.x && ePos.x >= pos.x)
+                {
+                    MoveInLine(pos, lePos, sPos, ePos);
+                }
+                else  // 範囲線の外だったら
+                {
+                    // 範囲の真ん中を得る
+                    Vector3 dPos = Vector3.zero;
+                    Vector3 tPos = Vector3.Lerp(sPos, ePos, 0.5f);
+                    dPos.y = sPos.y;
+                    dPos.x = tPos.x;
+                    dPos.z = tPos.z;
 
-                MoveOutLine(pos, dPos);
+                    MoveOutLine(pos, dPos);
+                }
+            }
+            else
+            {
+                FollowAnotherLegion(le, pos, sPos, ePos);
             }
         }
         else
@@ -148,11 +165,9 @@ public class Legion : MonoBehaviour
         if(lePos == Vector3.zero && legionFlag && !followLineFlag)
         {
             Vector3 targetPos = new Vector3(MinValue(sPos.x, ePos.x), pos.y, MaxValue(sPos.z, ePos.z));
-            targetPos.x += tDistance;
-            targetPos.z -= tDistance;
 
-            if (targetPos.x < pos.x && targetPos.x + arrivalDistance > pos.x &&
-                targetPos.z > pos.z && targetPos.z - arrivalDistance < pos.x)
+            if (targetPos.x - tWidthDistance < pos.x && targetPos.x + tWidthDistance > pos.x &&
+                targetPos.z + tHeightDistance > pos.z && targetPos.z - tHeightDistance < pos.z)
             {
                 followLineFlag = true;
             }
@@ -161,23 +176,7 @@ public class Legion : MonoBehaviour
                 tf.LookAt(targetPos);
                 lineVelocity = tf.forward * speed * Time.deltaTime;
             }
-        }
-        else if(legionFlag && !followLineFlag)
-        {
-            lePos.x = lePos.x + lDistance;
-            Vector3 targetPos = lePos;
-
-            tf.LookAt(pTf);
-            if(targetPos.x < pos.x && targetPos.x + arrivalDistance > pos.x &&
-                targetPos.z > pos.z && targetPos.z - arrivalDistance < pos.x)
-            {
-                followLineFlag = true;
-            }
-            else
-            {
-                tf.LookAt(targetPos);
-                lineVelocity = tf.forward * speed * Time.deltaTime;
-            }
+            Debug.Log("targetPos = " + targetPos);
         }
     }
 
@@ -192,6 +191,31 @@ public class Legion : MonoBehaviour
         if(distance > 0)
         {
             lineVelocity = tf.forward * speed * Time.deltaTime;
+        }
+    }
+
+    private void FollowAnotherLegion(Legion le, Vector3 pos, Vector3 sPos, Vector3 ePos)
+    {
+        if (legionFlag && !followLineFlag)
+        {
+            Vector3 lePos = le.transform.position;
+            lePos.x = lePos.x + lWidthDistance;
+            Vector3 targetPos = lePos;
+
+            if ((targetPos.x < pos.x && targetPos.x + lWidthDistance > pos.x) && 
+                le.GetFollowLineFlag() && ePos.x >= pos.x)
+            {
+                followLineFlag = true;
+            }
+            else
+            {
+                if(ePos.x < pos.x)
+                {
+                    targetPos.z = targetPos.z - lHeightDistance;
+                }
+                tf.LookAt(targetPos);
+                lineVelocity = tf.forward * speed * Time.deltaTime;
+            }
         }
     }
 
@@ -213,6 +237,18 @@ public class Legion : MonoBehaviour
         }
     }
 
+    private void UpdateValue()
+    {
+        moveFlag = false;
+        jumpFlag = false;
+        setLineFlag = false;
+        moveFlag = pointScript.GetMoveFlag();
+        jumpFlag = pointScript.GetJumpFlag();
+        setLineFlag = lineScript.GetSetLineFlag();
+        velocity = Vector3.zero;
+        lineVelocity = Vector3.zero;
+    }
+
     public Item FindItem()
     {
         return itemType;
@@ -220,6 +256,16 @@ public class Legion : MonoBehaviour
     public void SetItemType(Item type)
     {
         itemType = type;
+    }
+
+    public void SetFollowLineFlag(bool flag)
+    {
+        followLineFlag = flag;
+    }
+
+    public bool GetFollowLineFlag()
+    {
+        return followLineFlag;
     }
 
     private Vector3 AddVector(Vector3 pos1, Vector3 pos2)

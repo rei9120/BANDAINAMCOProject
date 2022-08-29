@@ -8,7 +8,7 @@ public class PointManager : MonoBehaviour
     [SerializeField] private GameObject point;
     private Transform tf;
     private int pressButtonCount = 0;
-    private const int longPressCount = 70;
+    private const int longPressCount = 100;
     private bool moveFlag = true;
     private bool jumpFlag = false;
 
@@ -45,8 +45,8 @@ public class PointManager : MonoBehaviour
                 pos.y = 0.5f + hitInfo.point.y;
                 tf.position = pos;
             }
-            Debug.Log("hitInfo = " + hitInfo.point);
         }
+        Debug.Log("moveFlag = " + moveFlag);
 
         return hitInfo;
     }
@@ -54,57 +54,40 @@ public class PointManager : MonoBehaviour
     // プレイヤーが操作する処理
     private void Control()
     {
-        buttonType = CheckMouseButton();
+        CheckMouseButton();
     }
 
-    private Mouse CheckMouseButton()
+    private void CheckMouseButton()
     {
         Mouse type = Mouse.None;
         // 左のボタンをクリックしたら
-        if (Input.GetMouseButton(0))
+        if (Input.GetMouseButtonDown(0))
         {
             type = Mouse.Left;
+            LeftMouseButton();
         }
         // 右のボタンをクリックしたら
-        else if(Input.GetMouseButton(1))
+        else if(Input.GetMouseButtonDown(1))
         {
             type = Mouse.Right;
+            RightMouseButton();
         }
         // 真ん中のボタンをクリックしたら
-        else if(Input.GetMouseButton(2))
+        else if(Input.GetMouseButtonDown(2))
         {
             type = Mouse.Middle;
+            MiddleMouseButton();
         }
 
         // 押されたボタンが前回と違うか、何も押されなかったら
-        if (buttonType != type && buttonType == Mouse.None)
+        if (buttonType != type || buttonType == Mouse.None)
         {
             pressButtonCount = 0;
         }
         else  // そうじゃなかったら
         {
             pressButtonCount++;
-            // 押されたボタンによる状態遷移
-            switch (buttonType)
-            {
-                // 左だったら
-                case Mouse.Left:
-                    LeftMouseButton();
-                    break;
-                // 右だったら
-                case Mouse.Right:
-                    RightMouseButton();
-                    break;
-                // 真ん中だったら
-                case Mouse.Middle:
-                    MiddleMouseButton();
-                    break;
-                default:
-                    break;
-            }
         }
-
-        return type;
     }
 
     private void LeftMouseButton()
@@ -121,15 +104,15 @@ public class PointManager : MonoBehaviour
         }
         else
         {
-            // キャラクターの動かすかどうかを変える
-            if (moveFlag)
-            {
-                moveFlag = false;
-            }
-            else
-            {
-                moveFlag = true;
-            }
+            // キャラクターを動かすかどうかを変える
+                if (moveFlag)
+                {
+                    moveFlag = false;
+                }
+                else
+                {
+                    moveFlag = true;
+                }
         }
     }
 
@@ -142,10 +125,13 @@ public class PointManager : MonoBehaviour
         }
         else
         {
-            // キャラクターをジャンプさせる
-            if (buttonType == Mouse.Right && !jumpFlag)
+            if (Input.GetMouseButtonDown(0))
             {
-                jumpFlag = true;
+                // キャラクターをジャンプさせる
+                if (buttonType == Mouse.Right && !jumpFlag)
+                {
+                    jumpFlag = true;
+                }
             }
         }
     }
