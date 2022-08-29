@@ -142,7 +142,7 @@ public class MouseLineRenderer : MonoBehaviour
             float tmp = arrayPos[0].y;
             for (int i = 0; i < linePosSize; i++)
             {
-                if (moveFlag && legionScript.CheckFollowLineFlag())
+                if (moveFlag)
                 {
                     velocity = tf.forward * speed * Time.deltaTime;
                     arrayPos[i] += velocity;

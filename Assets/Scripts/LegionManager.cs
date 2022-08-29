@@ -5,18 +5,21 @@ using UnityEngine;
 public class LegionManager : MonoBehaviour
 {
     [SerializeField] private GameObject legionPrefab;
-    private MouseLineRenderer lineScript;
+    private GameObject anchor;
     private GameObject point;
     private GameObject lineRenderer;
     private List<Legion> legion;
+    private Legion sidelegion;
+    private int createLegion = 0;
 
-    public void Init(GameObject p, GameObject l)
+    public void Init(GameObject p, GameObject l, GameObject a)
     {
         point = p;
         lineRenderer = l;
-        lineScript = lineRenderer.GetComponent<MouseLineRenderer>();
+        anchor = a;
         legion = new List<Legion>();
-        CreateLegion(3);
+        CreateLegion(5);
+        sidelegion = legion[0];
     }
 
     public void CreateLegion(int num)
@@ -27,12 +30,14 @@ public class LegionManager : MonoBehaviour
             legion.Add(obj.GetComponent<Legion>());
             if (legion.Count == 1)
             {
-                legion[legion.Count - 1].Init(point, lineRenderer, point.transform.position);
+                legion[legion.Count - 1].Init(point, lineRenderer, this.gameObject, anchor, point.transform.position);
             }
             else
             {
-                legion[legion.Count - 1].Init(point, lineRenderer, legion[legion.Count - 2].transform.position);
+                legion[legion.Count - 1].Init(point, lineRenderer, this.gameObject, anchor,legion[legion.Count - 2].transform.position);
             }
+            legion[legion.Count - 1].name = "legion" + (legion.Count - 1);
+            createLegion++;
         }
     }
 
@@ -58,12 +63,27 @@ public class LegionManager : MonoBehaviour
                     legion[i].ManagedUpdate(null);
                 }
             }
+            Debug.Log("legion = " + legion[i]);
         }
     }
 
-    public Legion GetLegionPtr()
+    public Legion GetStartLegionPtr()
     {
         return legion[0];
+    }
+    public Legion GetEndLegionPtr()
+    {
+        return legion[legion.Count - 1];
+    }
+
+    public Legion GetSideLegion()
+    {
+        return sidelegion;
+    }
+
+    public void SetSideLegion(Legion le)
+    {
+        sidelegion = le;
     }
 
     public bool CheckFollowLineFlag()
@@ -86,5 +106,10 @@ public class LegionManager : MonoBehaviour
         {
             legion[i].SetFollowLineFlag(flag);
         }
+    }
+
+    public void SetAnchorPosition(Vector3 pos)
+    {
+        anchor.transform.localPosition = pos;
     }
 }
