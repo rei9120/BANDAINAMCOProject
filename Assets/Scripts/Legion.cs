@@ -7,22 +7,30 @@ public class Legion : MonoBehaviour
     private PointManager pointScript;
     private MouseLineRenderer lineScript;
     private LegionManager legionScript;
+
     private GameObject lineRenderer;
+
+    private Animator anim;
+
     private Transform tf;
-    private Rigidbody rig;
     private Transform pTf;
-    private Rigidbody pRb;
     private Transform lTf;
     private Transform aTf;
     private Transform gTf;
+
+    private Rigidbody rig;
+    private Rigidbody pRb;
+
     private Vector3 velocity = Vector3.zero;
     private Vector3 lineVelocity = Vector3.zero;
     private Vector3 jumpForce = new Vector3(0.0f, 5.0f, 0.0f);
+
     private float speed = 10f;
     private float distance = 0.01f;
-    private float pDistance = 3.0f;
+    private float pDistance = 1.5f;
     private float lWidthDistance = 1.5f;
-    private float lHeightDistance = 1.0f;
+    private float lHeightDistance = 2.0f;
+
     private bool moveFlag = false;
     private bool jumpFlag = false;
     private bool setLineFlag = false;
@@ -30,6 +38,7 @@ public class Legion : MonoBehaviour
     private bool followLineFlag = false;
     private bool newLineFlag = false;
     private bool collisionFlag = true;
+    private bool arrivalFlag = false;
 
     public enum Item
     {
@@ -53,6 +62,7 @@ public class Legion : MonoBehaviour
         legionScript = le.GetComponent<LegionManager>();
         aTf = a.transform;
         aTf.position = Vector3.zero;
+        anim = this.GetComponent<Animator>();
     }
 
     public void ManagedUpdate(Legion le)
@@ -108,8 +118,11 @@ public class Legion : MonoBehaviour
             rig.AddForce(jumpForce, ForceMode.Impulse);
         }
 
-        Debug.Log("setLineFlag = " + setLineFlag);
-        Debug.Log("followLineFlag = " + followLineFlag);
+        Animation();
+
+        Debug.Log("arrivalFlag = " + arrivalFlag);
+        //Debug.Log("setLineFlag = " + setLineFlag);
+        //Debug.Log("followLineFlag = " + followLineFlag);
     }
 
     // ÉvÉåÉCÉÑÅ[Ç…Ç¬Ç¢ÇƒÇ¢Ç≠èàóù
@@ -120,10 +133,13 @@ public class Legion : MonoBehaviour
             float pos1 = pRb.position.x - rig.position.x;
             float pos2 = pRb.position.z - rig.position.z;
             float dis = Mathf.Sqrt(pos1 * pos1 + pos2 * pos2);
+            arrivalFlag = true;
             if (dis > pDistance)
             {
+                arrivalFlag = false;
                 velocity = tf.forward * speed * Time.deltaTime;
                 velocity.y = 0f;
+                Debug.Log("true");
             }
         }
         tf.LookAt(pTf);
@@ -135,8 +151,16 @@ public class Legion : MonoBehaviour
         if (moveFlag)
         {
             Transform tmp = legionScript.GetStartLegionPtr().transform;
-            tf.localRotation = tmp.localRotation;
-            velocity = tf.forward * speed * Time.deltaTime;
+            float pos1 = pRb.position.x - tmp.position.x;
+            float pos2 = pRb.position.z - tmp.position.z;
+            float dis = Mathf.Sqrt(pos1 * pos1 + pos2 * pos2);
+            arrivalFlag = true;
+            if (dis > pDistance)
+            {
+                arrivalFlag = false;
+                tf.localRotation = tmp.localRotation;
+                velocity = tf.forward * speed * Time.deltaTime;
+            }
         }
     }
 
@@ -157,9 +181,10 @@ public class Legion : MonoBehaviour
             Vector3 sPos = lineScript.GetStartLinePos();
             Vector3 ePos = lineScript.GetEndLinePos();
 
-            // îÕàÕê¸ÇÃíÜÇæÇ¡ÇΩÇÁ
             if (le == null)
             {
+                arrivalFlag = false;
+                // îÕàÕê¸ÇÃíÜÇæÇ¡ÇΩÇÁ
                 if (sPos.x <= pos.x && ePos.x >= pos.x)
                 {
                     MoveInLine(pos, lePos, sPos, ePos);
@@ -197,6 +222,7 @@ public class Legion : MonoBehaviour
             //    targetPos.z + tHeightDistance > pos.z && targetPos.z - tHeightDistance < pos.z)
             if(Distance(pos, targetPos) < distance)
             {
+                arrivalFlag = true;
                 followLineFlag = true;
                 legionScript.SetSideLegion(this);
             }
@@ -227,6 +253,7 @@ public class Legion : MonoBehaviour
     {
         if (legionFlag && !followLineFlag)
         {
+            arrivalFlag = false;
             Vector3 lePos = le.transform.position;
             lePos.x = lePos.x + lWidthDistance;
             Vector3 targetPos = lePos;
@@ -245,10 +272,12 @@ public class Legion : MonoBehaviour
 
             if (le.GetFollowLineFlag() && Distance(pos, targetPos) < distance && !newLineFlag)
             {
+                arrivalFlag = true;
                 followLineFlag = true;
             }
             else if(le.GetFollowLineFlag() && Distance(pos, targetPos) < distance && newLineFlag)
             {
+                arrivalFlag = true;
                 legionScript.SetSideLegion(this);
                 newLineFlag = false;
                 followLineFlag = true;
@@ -264,6 +293,28 @@ public class Legion : MonoBehaviour
             Ray ray = new Ray(rayPosition, tf.forward);
             Debug.DrawRay(tf.position, tf.forward * 3f, Color.red);
         }
+    }
+
+    private void Animation()
+    {
+        if (moveFlag || setLineFlag && !followLineFlag)
+        {
+            if (arrivalFlag)
+            {
+                anim.SetBool("ArivalFlag", true);
+            }
+            else
+            {
+                anim.SetBool("ArivalFlag", false);
+            }
+        }
+        else
+        {
+            arrivalFlag = false;
+            anim.SetBool("ArivalFlag", true);
+        }
+
+        
     }
 
     private void OnCollisionEnter(Collision col)

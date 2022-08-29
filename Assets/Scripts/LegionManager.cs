@@ -4,13 +4,14 @@ using UnityEngine;
 
 public class LegionManager : MonoBehaviour
 {
-    [SerializeField] private GameObject legionPrefab;
+    [SerializeField] private List<GameObject> legionPrefab;
     private GameObject anchor;
     private GameObject point;
     private GameObject lineRenderer;
     private List<Legion> legion;
     private Legion sidelegion;
     private int createLegion = 0;
+    private int GyaarKunNo;
 
     public void Init(GameObject p, GameObject l, GameObject a)
     {
@@ -18,7 +19,8 @@ public class LegionManager : MonoBehaviour
         lineRenderer = l;
         anchor = a;
         legion = new List<Legion>();
-        CreateLegion(5);
+        GyaarKunNo = 0;
+        CreateLegion(1);
         sidelegion = legion[0];
     }
 
@@ -26,7 +28,7 @@ public class LegionManager : MonoBehaviour
     {
         for (int i = 0; i < num; i++)
         {
-            GameObject obj = Instantiate(legionPrefab);
+            GameObject obj = Instantiate(legionPrefab[GyaarKunNo]);
             legion.Add(obj.GetComponent<Legion>());
             if (legion.Count == 1)
             {
@@ -38,6 +40,11 @@ public class LegionManager : MonoBehaviour
             }
             legion[legion.Count - 1].name = "legion" + (legion.Count - 1);
             createLegion++;
+            GyaarKunNo++;
+            if(GyaarKunNo > 5)
+            {
+                GyaarKunNo = 0;
+            }
         }
     }
 
