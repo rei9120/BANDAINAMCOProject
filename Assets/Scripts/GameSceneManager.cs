@@ -26,7 +26,7 @@ public class GameSceneManager : MonoBehaviour
         pointScript.Init();
         legionScript.Init(point, lineRenderer);
         cameraScript.Init(legionScript.GetLegionPtr());
-        mouseLineScript.Init(point);
+        mouseLineScript.Init(point, legionManager);
     }
 
     // Update is called once per frame

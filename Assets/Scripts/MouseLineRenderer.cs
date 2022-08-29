@@ -7,6 +7,7 @@ public class MouseLineRenderer : MonoBehaviour
     [SerializeField] private LineRenderer lineRenderer;
 	[SerializeField] private Material lineMaterial;
 	private PointManager pointScript;
+	private LegionManager legionScript;
 	private Transform tf;
 	private Transform pTf;
 	private Vector3[] arrayPos = { Vector3.zero, Vector3.zero, Vector3.zero, Vector3.zero, Vector3.zero };
@@ -15,7 +16,7 @@ public class MouseLineRenderer : MonoBehaviour
 	private Vector3 velocity = Vector3.zero;
 	private const float lineDistance = 1.0f;
 	private float distance = 0.0f;
-	private float speed = 10f;
+	private float speed = 9f;
 	private int linePosSize = 5;
 	private bool drawStartFlag = false;
 	private bool setLineFlag = false;
@@ -30,7 +31,7 @@ public class MouseLineRenderer : MonoBehaviour
     }
 	private Line lineType = Line.None;
 
-    public void Init(GameObject p)
+    public void Init(GameObject p, GameObject l)
     {
 		if (lineRenderer != null)
 		{
@@ -62,6 +63,7 @@ public class MouseLineRenderer : MonoBehaviour
 		}
 		pTf = p.transform;
 		pointScript = p.GetComponent<PointManager>();
+		legionScript = l.GetComponent<LegionManager>();
 		tf = this.transform;
 	}
 
@@ -71,19 +73,21 @@ public class MouseLineRenderer : MonoBehaviour
 		CreateLine(info);
 
 		DrawLine();
-
-		Debug.Log("startPos = " + startPos);
-		Debug.Log("nextPos = " + nextPos);
+		Vector3 tPos = Vector3.Lerp(arrayPos[0], arrayPos[2], 0.5f);
+		tPos.y = startPos.y;
+		tf.position = tPos;
+		tf.LookAt(pTf);
 	}
 
 	// ラインを作る処理
 	private void CreateLine(RaycastHit info)
     {
 		// 真ん中のボタンをクリックで、引いたラインを消す処理(ラインが細すぎた場合も)
-		if (Input.GetMouseButtonDown(2) || distance < lineDistance && setLineFlag)
+		if (Input.GetMouseButtonDown(2))
 		{
 			setLineFlag = false;
 			lineType = Line.None;
+			legionScript.FollowLineFlag(false);
 			lineRenderer.positionCount = linePosSize;
 			for (int i = 0; i < linePosSize; i++)
 			{
@@ -115,8 +119,13 @@ public class MouseLineRenderer : MonoBehaviour
 			if (lineType == Line.Draw)
 			{
 				setLineFlag = true;  // その状態のラインを保存する
+				lineType = Line.None;
+				lineRenderer.positionCount = linePosSize;
+				for (int i = 0; i < linePosSize; i++)
+				{
+					this.lineRenderer.SetPosition(i, Vector3.zero);
+				}
 			}
-			distance = DifferenceWidthVector(arrayPos[0], arrayPos[2]).x;
 			lineType = Line.None;
 			startPos = Vector3.zero;
 			drawStartFlag = false;  // 引き始めに変更
@@ -126,27 +135,30 @@ public class MouseLineRenderer : MonoBehaviour
 	// ラインを引く処理
 	private void DrawLine()
     {
-		// 作ったラインを引き続ける
-		if (lineType == Line.None && setLineFlag)
-		{
-			moveFlag = pointScript.GetMoveFlag();
-			for (int i = 0; i < linePosSize; i++)
-			{
-				// 追加した頂点の座標を設定
-				this.lineRenderer.SetPosition(i, arrayPos[i]);
-				if (moveFlag)
-				{
-					velocity = arrayPos[i] + tf.forward * speed * Time.deltaTime;
-				}
-			}
-			Vector3 tPos = Vector3.Lerp(arrayPos[0], arrayPos[2], 0.5f);
-			tPos.y = startPos.y;
-			tf.position = tPos;
-			tf.LookAt(pTf);
-		}
+        // 作ったラインを引き続ける
+        if (lineType == Line.None && setLineFlag)
+        {
+            moveFlag = pointScript.GetMoveFlag();
+            float tmp = arrayPos[0].y;
+            for (int i = 0; i < linePosSize; i++)
+            {
+                if (moveFlag && legionScript.CheckFollowLineFlag())
+                {
+                    velocity = tf.forward * speed * Time.deltaTime;
+                    arrayPos[i] += velocity;
+                    arrayPos[i].y = tmp;
+                }
+                // 追加した頂点の座標を設定
+                this.lineRenderer.SetPosition(i, arrayPos[i]);
+            }
+            if (!moveFlag)
+            {
+                velocity = Vector3.zero;
+            }
+        }
 
-		// 作っているラインを可視化する
-		if (lineType == Line.Draw)
+        // 作っているラインを可視化する
+        if (lineType == Line.Draw)
 		{
 			for (int i = 0; i < linePosSize; i++)
 			{
@@ -178,6 +190,7 @@ public class MouseLineRenderer : MonoBehaviour
 				this.lineRenderer.SetPosition(i, clickPos);
 				arrayPos[i] = clickPos;
 			}
+			distance = DifferenceWidthVector(arrayPos[0], arrayPos[2]).x;
 		}
 	}
 
@@ -190,6 +203,11 @@ public class MouseLineRenderer : MonoBehaviour
     {
 		return arrayPos[2];
 	}
+
+	public Vector3 GetLineVelocity()
+	{
+		return velocity;
+    }
 
 	private Vector3 DifferenceWidthVector(Vector3 pos1, Vector3 pos2)
     {
@@ -209,5 +227,10 @@ public class MouseLineRenderer : MonoBehaviour
 	public bool GetSetLineFlag()
     {
 		return setLineFlag;
+    }
+
+	public bool GetStartLineFlag()
+    {
+		return drawStartFlag;
     }
 }

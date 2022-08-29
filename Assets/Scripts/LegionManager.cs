@@ -16,7 +16,7 @@ public class LegionManager : MonoBehaviour
         lineRenderer = l;
         lineScript = lineRenderer.GetComponent<MouseLineRenderer>();
         legion = new List<Legion>();
-        CreateLegion(1);
+        CreateLegion(3);
     }
 
     public void CreateLegion(int num)
@@ -64,5 +64,27 @@ public class LegionManager : MonoBehaviour
     public Legion GetLegionPtr()
     {
         return legion[0];
+    }
+
+    public bool CheckFollowLineFlag()
+    {
+        for(int i = 0; i < legion.Count; i++)
+        {
+            bool flag = false;
+            flag = legion[i].GetFollowLineFlag();
+            if(!flag)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public void FollowLineFlag(bool flag)
+    {
+        for(int i = 0; i < legion.Count; i++)
+        {
+            legion[i].SetFollowLineFlag(flag);
+        }
     }
 }
