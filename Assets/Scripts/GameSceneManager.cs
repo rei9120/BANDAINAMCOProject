@@ -10,6 +10,7 @@ public class GameSceneManager : MonoBehaviour
     [SerializeField] private GameObject legionManager;
     [SerializeField] private GameObject gameCamera;
     [SerializeField] private GameObject lineRenderer;
+    [SerializeField] private GameObject Anchor;
     private PointManager pointScript;
     private LegionManager legionScript;
     private CameraManager cameraScript;
@@ -24,8 +25,8 @@ public class GameSceneManager : MonoBehaviour
         cameraScript = gameCamera.GetComponent<CameraManager>();
         mouseLineScript = lineRenderer.GetComponent<MouseLineRenderer>();
         pointScript.Init();
-        legionScript.Init(point, lineRenderer);
-        cameraScript.Init(legionScript.GetLegionPtr());
+        legionScript.Init(point, lineRenderer, Anchor);
+        cameraScript.Init(legionScript.GetStartLegionPtr());
         mouseLineScript.Init(point, legionManager);
     }
 
@@ -34,7 +35,7 @@ public class GameSceneManager : MonoBehaviour
     {
         hitInfo = pointScript.ManagedUpdate();
         legionScript.ManagedUpdate();
-        cameraScript.ManagedUpdate(legionScript.GetLegionPtr());
+        cameraScript.ManagedUpdate(legionScript.GetStartLegionPtr());
         mouseLineScript.ManagedUpdate(hitInfo);
 
         if (Input.GetKeyDown(KeyCode.Space))

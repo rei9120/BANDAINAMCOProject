@@ -105,14 +105,14 @@ public class PointManager : MonoBehaviour
         else
         {
             // キャラクターを動かすかどうかを変える
-                if (moveFlag)
-                {
-                    moveFlag = false;
-                }
-                else
-                {
-                    moveFlag = true;
-                }
+            if (moveFlag)
+            {
+                moveFlag = false;
+            }
+            else
+            {
+                moveFlag = true;
+            }
         }
     }
 
@@ -148,6 +148,11 @@ public class PointManager : MonoBehaviour
     public bool GetMoveFlag()
     {
         return moveFlag;
+    }
+
+    public void SetMoveFlag(bool flag)
+    {
+        moveFlag = flag;
     }
     public bool GetJumpFlag()
     {

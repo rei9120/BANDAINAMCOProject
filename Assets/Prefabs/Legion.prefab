@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 3807094438644966737}
   - component: {fileID: -7520227647706937911}
   - component: {fileID: 5924611714768562638}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Legion
   m_TagString: Untagged
   m_Icon: {fileID: 0}
