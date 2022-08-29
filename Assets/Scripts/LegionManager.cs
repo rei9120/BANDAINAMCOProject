@@ -63,17 +63,43 @@ public class LegionManager : MonoBehaviour
                     legion[i].ManagedUpdate(null);
                 }
             }
-            Debug.Log("legion = " + legion[i]);
+        }
+
+        if(Input.GetKeyDown(KeyCode.Backspace))
+        {
+            LegionDestroy(legion[0]);
         }
     }
 
     public Legion GetStartLegionPtr()
     {
-        return legion[0];
+        if (legion.Count > 0)
+        {
+            if (legion[0] != null)
+            {
+                return legion[0];
+            }
+            return null;
+        }
+        else
+        {
+            return null;
+        }
     }
     public Legion GetEndLegionPtr()
     {
-        return legion[legion.Count - 1];
+        if (legion.Count > 0)
+        {
+            if (legion[legion.Count - 1] != null)
+            {
+                return legion[legion.Count - 1];
+            }
+            return null;
+        }
+        else
+        {
+            return null;
+        }
     }
 
     public Legion GetSideLegion()
@@ -111,5 +137,12 @@ public class LegionManager : MonoBehaviour
     public void SetAnchorPosition(Vector3 pos)
     {
         anchor.transform.localPosition = pos;
+    }
+
+    public void LegionDestroy(Legion le)
+    {
+        Destroy(le.gameObject);
+        Destroy(le);
+        legion.Remove(le);
     }
 }

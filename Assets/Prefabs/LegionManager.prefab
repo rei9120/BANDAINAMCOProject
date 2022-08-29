@@ -27,6 +27,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 2.7818546, y: 1.2544296, z: -1.4237611}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -43,4 +44,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 70cf3f9462e8cf3449e566eb5ad0eb04, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  legionPrefab: {fileID: 2783712604649256821, guid: 305e54199450e3447824a2a79e4e2f87, type: 3}
+  legionPrefab: {fileID: 6749682434910055865, guid: a45cb4a2469196e4096515c6aecb614a, type: 3}
