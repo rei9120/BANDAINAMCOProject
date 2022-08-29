@@ -6,6 +6,7 @@ TagManager:
   tags:
   - NormalItem
   - Ground
+  - Fall
   layers:
   - Default
   - TransparentFX

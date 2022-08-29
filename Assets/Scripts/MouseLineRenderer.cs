@@ -14,7 +14,7 @@ public class MouseLineRenderer : MonoBehaviour
 	private Vector3 startPos = Vector3.zero;
 	private Vector3 nextPos = Vector3.zero;
 	private Vector3 velocity = Vector3.zero;
-	private const float lineDistance = 1.0f;
+	private const float lineDistance = 1f;
 	private float distance = 0.0f;
 	private float speed = 9f;
 	private int linePosSize = 5;
@@ -83,7 +83,7 @@ public class MouseLineRenderer : MonoBehaviour
 	private void CreateLine(RaycastHit info)
     {
 		// 真ん中のボタンをクリックで、引いたラインを消す処理(ラインが細すぎた場合も)
-		if (Input.GetMouseButtonDown(2))
+		if (Input.GetMouseButtonDown(2) || distance < lineDistance)
 		{
 			setLineFlag = false;
 			lineType = Line.None;
@@ -142,18 +142,8 @@ public class MouseLineRenderer : MonoBehaviour
             float tmp = arrayPos[0].y;
             for (int i = 0; i < linePosSize; i++)
             {
-                if (moveFlag)
-                {
-                    velocity = tf.forward * speed * Time.deltaTime;
-                    arrayPos[i] += velocity;
-                    arrayPos[i].y = tmp;
-                }
                 // 追加した頂点の座標を設定
                 this.lineRenderer.SetPosition(i, arrayPos[i]);
-            }
-            if (!moveFlag)
-            {
-                velocity = Vector3.zero;
             }
         }
 
