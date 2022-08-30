@@ -20,7 +20,7 @@ public class LegionManager : MonoBehaviour
         anchor = a;
         legion = new List<Legion>();
         GyaarKunNo = 0;
-        CreateLegion(1);
+        CreateLegion(5);
         sidelegion = legion[0];
     }
 
@@ -82,9 +82,12 @@ public class LegionManager : MonoBehaviour
     {
         if (legion.Count > 0)
         {
-            if (legion[0] != null)
+            for (int i = 0; i < legion.Count; i++)
             {
-                return legion[0];
+                if (legion[i] != null)
+                {
+                    return legion[i];
+                }
             }
             return null;
         }

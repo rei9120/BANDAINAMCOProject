@@ -10,11 +10,13 @@ public class GameSceneManager : MonoBehaviour
     [SerializeField] private GameObject legionManager;
     [SerializeField] private GameObject gameCamera;
     [SerializeField] private GameObject lineRenderer;
-    [SerializeField] private GameObject Anchor;
+    [SerializeField] private GameObject anchor;
+    [SerializeField] private GameObject obstacleManager;
     private PointManager pointScript;
     private LegionManager legionScript;
     private CameraManager cameraScript;
     private MouseLineRenderer mouseLineScript;
+    private ObstacleManager obstacleScript;
 
     private RaycastHit hitInfo;
 
@@ -24,10 +26,12 @@ public class GameSceneManager : MonoBehaviour
         legionScript = legionManager.GetComponent<LegionManager>();
         cameraScript = gameCamera.GetComponent<CameraManager>();
         mouseLineScript = lineRenderer.GetComponent<MouseLineRenderer>();
+        obstacleScript = obstacleManager.GetComponent<ObstacleManager>();
         pointScript.Init();
-        legionScript.Init(point, lineRenderer, Anchor);
+        legionScript.Init(point, lineRenderer, anchor);
         cameraScript.Init(legionScript.GetStartLegionPtr());
         mouseLineScript.Init(point, legionManager);
+        obstacleScript.Init();
     }
 
     // Update is called once per frame
@@ -37,6 +41,7 @@ public class GameSceneManager : MonoBehaviour
         legionScript.ManagedUpdate();
         cameraScript.ManagedUpdate(legionScript.GetStartLegionPtr());
         mouseLineScript.ManagedUpdate(hitInfo);
+        obstacleScript.ManagedUpdate();
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
