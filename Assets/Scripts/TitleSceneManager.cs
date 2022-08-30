@@ -9,6 +9,9 @@ public class TitleSceneManager : MonoBehaviour
 {
     [SerializeField] private FadeManager fadeScript;
     [SerializeField] private GameObject fade;
+    [SerializeField] private TextManager textScript;
+    [SerializeField] private GameObject manualCanvas;
+    private ManualManager manualScript;
     private Image fadeImage;
     private Color fadeColor;
     private float alphaSpeed = 0.03f;
@@ -20,12 +23,18 @@ public class TitleSceneManager : MonoBehaviour
     {
         fadeImage = fade.GetComponent<Image>();
         fadeColor = fadeImage.color;
+        manualScript = manualCanvas.GetComponent<ManualManager>();
+        if (manualCanvas.activeSelf)
+        {
+            manualCanvas.SetActive(false);
+        }
+        textScript.Init();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (!sceneFlag)
+        if (!sceneFlag && !manualCanvas.activeSelf)
         {
             if (fadeFlag)
             {
@@ -36,9 +45,29 @@ public class TitleSceneManager : MonoBehaviour
                     fadeFlag = false;
                 }
             }
+
+            textScript.ManagedUpdate();
+
+            if (textScript.GetManualFlag())
+            {
+                manualCanvas.SetActive(true);
+            }
+
+            if (textScript.GetExitFlag())
+            {
+#if UNITY_EDITOR
+                UnityEditor.EditorApplication.isPlaying = false;//ゲームプレイ終了
+#else
+    Application.Quit();//ゲームプレイ終了
+#endif
+            }
+        }
+        else
+        {
+            manualScript.ManagedUpdate();
         }
 
-        if (Input.GetKeyDown(KeyCode.Space) || sceneFlag)
+        if (textScript.GetGameStartFlag() || sceneFlag)
         {
             sceneFlag = true;
             fadeFlag = true;

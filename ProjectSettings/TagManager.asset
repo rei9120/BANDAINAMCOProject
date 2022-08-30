@@ -9,6 +9,10 @@ TagManager:
   - Fall
   - Obstancle
   - Legion
+  - GameStart
+  - Manual
+  - Exit
+  - End
   layers:
   - Default
   - TransparentFX
