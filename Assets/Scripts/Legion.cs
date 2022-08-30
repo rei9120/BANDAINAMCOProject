@@ -26,9 +26,9 @@ public class Legion : MonoBehaviour
     private Vector3 jumpForce = new Vector3(0.0f, 5.0f, 0.0f);
 
     private float speed = 10f;
-    private float distance = 0.01f;
+    private float distance = 0.03f;
     private float pDistance = 1.5f;
-    private float lWidthDistance = 1.5f;
+    private float lWidthDistance = 2.0f;
     private float lHeightDistance = 2.0f;
 
     private bool moveFlag = false;
@@ -333,6 +333,11 @@ public class Legion : MonoBehaviour
                 pointScript.SetJumpFlag(false);
             }
             gTf = cTf.gameObject.transform;
+        }
+
+        if(cTf.tag == "Obstacle")
+        {
+            Destroy(this);
         }
 
         if(cTf.tag == "Fall")
