@@ -28,7 +28,7 @@ public class GameSceneManager : MonoBehaviour
         mouseLineScript = lineRenderer.GetComponent<MouseLineRenderer>();
         obstacleScript = obstacleManager.GetComponent<ObstacleManager>();
         pointScript.Init();
-        legionScript.Init(point, lineRenderer, anchor);
+        legionScript.Init(point, lineRenderer);
         cameraScript.Init(legionScript.GetStartLegionPtr());
         mouseLineScript.Init(point, legionManager);
         obstacleScript.Init();
@@ -38,10 +38,10 @@ public class GameSceneManager : MonoBehaviour
     private void Update()
     {
         hitInfo = pointScript.ManagedUpdate();
-        legionScript.ManagedUpdate();
-        cameraScript.ManagedUpdate(legionScript.GetStartLegionPtr());
         mouseLineScript.ManagedUpdate(hitInfo);
         obstacleScript.ManagedUpdate();
+        legionScript.ManagedUpdate();
+        cameraScript.ManagedUpdate(legionScript.GetStartLegionPtr());
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
