@@ -1904,7 +1904,7 @@ GameObject:
   - component: {fileID: 2776995673911186844}
   - component: {fileID: 3292701341395963763}
   - component: {fileID: 2842585309655441962}
-  - component: {fileID: -9121766686917441260}
+  - component: {fileID: -2177069371341331442}
   m_Layer: 6
   m_Name: Gyaarkun2
   m_TagString: Legion
@@ -1979,8 +1979,8 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
---- !u!64 &-9121766686917441260
-MeshCollider:
+--- !u!65 &-2177069371341331442
+BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -1989,10 +1989,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 4
-  m_Convex: 1
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 2959467708922500008, guid: b8ffe3a77c7b5ec418801f97f28a4951, type: 3}
+  serializedVersion: 2
+  m_Size: {x: 0.06718897, y: 0.12888008, z: 0.07019483}
+  m_Center: {x: -0.00021613539, y: 0.06617908, z: 0.0014533311}
 --- !u!1 &5298786347871851127
 GameObject:
   m_ObjectHideFlags: 0

@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 2138677392}
-  m_IndirectSpecularColor: {r: 0.28085274, g: 0.36602777, b: 0.49832973, a: 1}
+  m_IndirectSpecularColor: {r: 0.28085276, g: 0.36602777, b: 0.49832976, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -737,7 +737,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e49db9a2b11b604b93e1e699fd443f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  legionScript: {fileID: 0}
+  legionScript: {fileID: 1921287969}
   point: {fileID: 518612553}
 --- !u!65 &518612555
 BoxCollider:
@@ -1855,6 +1855,17 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1921287969 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 607537743673805658, guid: ed9ef39b857aec84d9203e423bbf5f23, type: 3}
+  m_PrefabInstance: {fileID: 183103177}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70cf3f9462e8cf3449e566eb5ad0eb04, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1955184063
 GameObject:
   m_ObjectHideFlags: 0
@@ -2062,7 +2073,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1617922020503536712, guid: a1dc9c4561183984db7f08bd6885aabe, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1617922020503536712, guid: a1dc9c4561183984db7f08bd6885aabe, type: 3}
       propertyPath: m_TagString

@@ -46,7 +46,6 @@ public class PointManager : MonoBehaviour
                 tf.position = pos;
             }
         }
-        Debug.Log("moveFlag = " + moveFlag);
 
         return hitInfo;
     }
@@ -114,6 +113,8 @@ public class PointManager : MonoBehaviour
                 moveFlag = true;
             }
         }
+
+        moveFlag = legionScript.CheckCanMove();
     }
 
     private void RightMouseButton()

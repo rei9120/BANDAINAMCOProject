@@ -83,11 +83,10 @@ public class MouseLineRenderer : MonoBehaviour
 	private void CreateLine(RaycastHit info)
     {
 		// 真ん中のボタンをクリックで、引いたラインを消す処理(ラインが細すぎた場合も)
-		if (Input.GetMouseButtonDown(2) || distance < lineDistance)
+		if (Input.GetMouseButtonDown(2) || distance < lineDistance && setLineFlag)
 		{
 			setLineFlag = false;
 			lineType = Line.None;
-			legionScript.FollowLineFlag(false);
 			lineRenderer.positionCount = linePosSize;
 			for (int i = 0; i < linePosSize; i++)
 			{

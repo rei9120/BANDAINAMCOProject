@@ -27,6 +27,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 2.7818546, y: 1.2544296, z: -1.4237611}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -43,6 +44,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: adfc03cb3cacaff48ac067d785eb6976, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameCameraPrefab: {fileID: 833408093573912563, guid: c2798d5e37a94ac4c8faf2f711a945a0, type: 3}
-  playerManager: {fileID: 7409828745485650436, guid: 5bce18ff091d51f4a8b082b89b80943f, type: 3}
+  point: {fileID: 0}
   legionManager: {fileID: 8682771735826891390, guid: ed9ef39b857aec84d9203e423bbf5f23, type: 3}
+  gameCamera: {fileID: 0}
+  lineRenderer: {fileID: 0}
+  anchor: {fileID: 0}
+  obstacleManager: {fileID: 0}
