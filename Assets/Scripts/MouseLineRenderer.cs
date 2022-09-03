@@ -16,13 +16,9 @@ public class MouseLineRenderer : MonoBehaviour
 	private Vector3 velocity = Vector3.zero;
 	private const float lineDistance = 1f;
 	private float distance = 0.0f;
-	private float speed = 9f;
 	private int linePosSize = 5;
 	private bool drawStartFlag = false;
 	private bool setLineFlag = false;
-	private bool moveFlag = false;
-
-	private int debugCount = 0;
 
 	enum Line
     {
@@ -73,25 +69,15 @@ public class MouseLineRenderer : MonoBehaviour
 		CreateLine(info);
 
 		DrawLine();
-		Vector3 tPos = Vector3.Lerp(arrayPos[0], arrayPos[2], 0.5f);
-		tPos.y = startPos.y;
-		tf.position = tPos;
-		tf.LookAt(pTf);
 	}
 
 	// ラインを作る処理
 	private void CreateLine(RaycastHit info)
     {
 		// 真ん中のボタンをクリックで、引いたラインを消す処理(ラインが細すぎた場合も)
-		if (Input.GetMouseButtonDown(2) || distance < lineDistance && setLineFlag)
+		if (Input.GetMouseButtonDown(2))
 		{
-			setLineFlag = false;
-			lineType = Line.None;
-			lineRenderer.positionCount = linePosSize;
-			for (int i = 0; i < linePosSize; i++)
-			{
-				this.lineRenderer.SetPosition(i, Vector3.zero);
-			}
+			ClearLine();
 		}
 
 		// 左のボタンをクリックで、ラインを引く
@@ -99,7 +85,6 @@ public class MouseLineRenderer : MonoBehaviour
 		{
 			// 四角を描くために必要な頂点を代入する
 			lineRenderer.positionCount = linePosSize;
-			debugCount++;
 
 			// 引き始めだったら
 			if (!drawStartFlag)
@@ -125,6 +110,10 @@ public class MouseLineRenderer : MonoBehaviour
 					this.lineRenderer.SetPosition(i, Vector3.zero);
 				}
 			}
+			if(distance < lineDistance)
+            {
+				ClearLine();
+            }
 			lineType = Line.None;
 			startPos = Vector3.zero;
 			drawStartFlag = false;  // 引き始めに変更
@@ -137,7 +126,6 @@ public class MouseLineRenderer : MonoBehaviour
         // 作ったラインを引き続ける
         if (lineType == Line.None && setLineFlag)
         {
-            moveFlag = pointScript.GetMoveFlag();
             float tmp = arrayPos[0].y;
             for (int i = 0; i < linePosSize; i++)
             {
@@ -180,6 +168,18 @@ public class MouseLineRenderer : MonoBehaviour
 				arrayPos[i] = clickPos;
 			}
 			distance = DifferenceWidthVector(arrayPos[0], arrayPos[2]).x;
+		}
+	}
+
+	private void ClearLine()
+    {
+		setLineFlag = false;
+		lineType = Line.None;
+		drawStartFlag = false;  // 引き始めに変更
+		lineRenderer.positionCount = linePosSize;
+		for (int i = 0; i < linePosSize; i++)
+		{
+			this.lineRenderer.SetPosition(i, Vector3.zero);
 		}
 	}
 

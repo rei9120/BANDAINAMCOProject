@@ -7,11 +7,11 @@ using UnityEngine.UI;
 [DefaultExecutionOrder(-1)]
 public class TitleSceneManager : MonoBehaviour
 {
-    [SerializeField] private FadeManager fadeScript;
     [SerializeField] private GameObject fade;
     [SerializeField] private TextManager textScript;
     [SerializeField] private GameObject manualCanvas;
     private ManualManager manualScript;
+    private FadeManager fadeScript;
     private Image fadeImage;
     private Color fadeColor;
     private float alphaSpeed = 0.03f;
@@ -23,6 +23,7 @@ public class TitleSceneManager : MonoBehaviour
     {
         fadeImage = fade.GetComponent<Image>();
         fadeColor = fadeImage.color;
+        fadeScript = fade.GetComponent<FadeManager>();
         manualScript = manualCanvas.GetComponent<ManualManager>();
         if (manualCanvas.activeSelf)
         {

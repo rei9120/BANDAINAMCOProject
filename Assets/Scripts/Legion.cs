@@ -19,13 +19,11 @@ public class Legion : MonoBehaviour
     private Vector3 jumpForce = new Vector3(0.0f, 5.0f, 0.0f);
 
     private float speed = 10f;
-    
+
     private bool moveFlag = false;
     private bool jumpFlag = false;
     private bool legionFlag = false;
     private bool arrivalFlag = false;
-    private bool lineFlag = false;
-    private bool allLegionFlag = false;
 
     public enum Item
     {
@@ -47,68 +45,67 @@ public class Legion : MonoBehaviour
         anim = this.GetComponent<Animator>();
     }
 
-    public void ManagedUpdate(Vector3 targetPos)
+    public void ManagedUpdate(Vector3 targetPos, float deltaTime)
     {
         // 必要な値を更新または初期化する
         UpdateValue();
-
-        if (!arrivalFlag && targetPos != Vector3.zero)
-        {
-            Move(targetPos);
-        }
-        else
-        {
-            if (legionFlag)
-            {
-                tf.localRotation = Quaternion.LookRotation(pTf.position - targetPos);
-            }
-            else
-            {
-                tf.LookAt(pTf);
-            }
-        }
 
         if (jumpFlag)
         {
             rig.AddForce(jumpForce, ForceMode.Impulse);
         }
 
+        Move(targetPos, deltaTime);
+
         Animation();
-        rig.position += velocity;
     }
 
-    private void Move(Vector3 tPos)
+    private void Move(Vector3 tPos, float deltaTime)
     {
-        if(tPos != rig.position)
+        switch (legionFlag)
         {
-            // 隊列している場合
-            if (legionFlag)
-            {
-                tf.localRotation = Quaternion.LookRotation(pTf.position - tPos);
-            }
-            else
-            {
-                tPos.y = rig.position.y;
-                tf.LookAt(tPos);
-            }
-
-            if(moveFlag)
-            {
-                velocity = tf.forward * speed * Time.deltaTime;
-            }
-            else
-            {
-                if (lineFlag && !legionFlag)
+            case true:
+                MoveFollowLegion(tPos, deltaTime);
+                break;
+            case false:
+                if (legionScript.GetLineFlag())
                 {
-                    velocity = tf.forward * speed * Time.deltaTime;
+                    MoveFollowLine(tPos, deltaTime);
                 }
-            }
+                else
+                {
+                    MoveFollowPlayer(deltaTime);
+                }
+                break;
         }
+
+        if (legionScript.GetMoveFlag())
+        {
+            rig.position += velocity;
+        }
+    }
+
+    public void MoveFollowPlayer(float deltaTime)
+    {
+        tf.LookAt(pTf);
+        velocity = tf.forward * speed * deltaTime;
+    }
+
+    public void MoveFollowLegion(Vector3 tPos, float deltaTime)
+    {
+        tf.localRotation = Quaternion.LookRotation(pTf.position - tPos);
+        velocity = tf.forward * speed * deltaTime;
+    }
+
+    public void MoveFollowLine(Vector3 tPos, float deltaTime)
+    {
+        tf.LookAt(tPos);
+        velocity = tf.forward * speed * deltaTime;
     }
 
     private void Animation()
     {
-        if (moveFlag)
+        if (legionScript.GetMoveFlag())
         {
             anim.SetBool("ArrivalFlag", arrivalFlag);
         }
@@ -148,7 +145,6 @@ public class Legion : MonoBehaviour
 
     private void UpdateValue()
     {
-        jumpFlag = false;
         jumpFlag = pointScript.GetJumpFlag();
         velocity = Vector3.zero;
     }
@@ -167,11 +163,6 @@ public class Legion : MonoBehaviour
         moveFlag = flag;
     }
 
-    public void SetLineFlag(bool flag)
-    {
-        lineFlag = flag;
-    }
-
     public bool GetLegionFlag()
     {
         return legionFlag;
@@ -185,11 +176,6 @@ public class Legion : MonoBehaviour
     public void SetArrivalFlag(bool flag)
     {
         arrivalFlag = flag;
-    }
-
-    public void SetAllLegionFlag(bool flag)
-    {
-        allLegionFlag = flag;
     }
 
     public float CompareTheDistanceYouAndOther(Vector3 tPos)

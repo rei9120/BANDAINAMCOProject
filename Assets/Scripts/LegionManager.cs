@@ -21,6 +21,7 @@ public class LegionManager : MonoBehaviour
     private Rigidbody rRb;
     private int GyaarKunNo;
 
+    private Vector3 aimPos = Vector3.zero;
     private float distance = 0.1f;
     private float pDistance = 1.5f;
     private float lWidthDistance = 2.0f;
@@ -51,7 +52,7 @@ public class LegionManager : MonoBehaviour
         // Legionオブジェクト
         legion = new List<Legion>();
         GyaarKunNo = 0;
-        CreateLegion(3);
+        CreateLegion(5);
         leftSideStartLegion = legion[0];
         leftSidelegion = legion[0];
         rightSidelegion = legion[0];
@@ -63,11 +64,18 @@ public class LegionManager : MonoBehaviour
     /// <summary>
     /// 更新処理(GameSceneManagerに呼ばれる)
     /// </summary>
-    public void ManagedUpdate()
+    public void ManagedUpdate(float deltaTime)
     {
         UpdateValue();
 
-        bool flag = CheckAllLegionFlag();
+        if (setLineFlag)
+        {
+            allLegionFlag = CheckAllLegionFlag();
+        }
+        else
+        {
+            ReleaseLegion();
+        }
 
         // Legionオブジェクトの行動を更新する
         for (int i = 0; i < legion.Count; i++)
@@ -83,11 +91,10 @@ public class LegionManager : MonoBehaviour
             if (legion[i] != null)
             {
                 // 行動パターンを決める
-                legion[i].SetAllLegionFlag(flag);
                 legionFlag = legion[i].GetLegionFlag();
-                legion[i].SetMoveFlag(moveFlag);
-                Vector3 tPos = DecideLegionMove(legion[i], i);
-                legion[i].ManagedUpdate(tPos);
+                legion[i].SetMoveFlag(CheckMoveFlag());
+                DecideLegionMove(legion[i], i);
+                legion[i].ManagedUpdate(aimPos, deltaTime);
             }
         }
 
@@ -103,26 +110,20 @@ public class LegionManager : MonoBehaviour
     /// <param name="le">legionオブジェクト</param>
     /// <param name="leNo">貰ってきたlegionオブジェクトの番号</param>
     /// <returns>移動する位置</returns>
-    private Vector3 DecideLegionMove(Legion le, int leNo)
+    private void DecideLegionMove(Legion le, int leNo)
     {
-        Vector3 tPos = Vector3.zero;
         // ラインが引かれているか
         switch(setLineFlag)
         {
             case true:
-                tPos = LineMove(le, leNo);  // ラインに対しての行動を行う
+                LineMove(le, leNo);  // ラインに対しての行動を行う
                 break;
             case false:
                 sideFlag = false;
-                le.SetLegionFlag(false);
-                if (moveFlag)
-                {
-                    tPos = FollowPlayer(le);  // プレイヤーについていく
-                }
+                FollowPlayer(le);  // プレイヤーについていく
                 break;
         }
         le.SetArrivalFlag(arrivalFlag);
-        return tPos;
     }
 
     /// <summary>
@@ -130,15 +131,15 @@ public class LegionManager : MonoBehaviour
     /// </summary>
     /// <param name="le">legionオブジェクト</param>
     /// <returns>移動する位置</returns>
-    private Vector3 FollowPlayer(Legion le)
+    private void FollowPlayer(Legion le)
     {
         float dis = le.CompareTheDistanceYouAndOther(pRig.position);
         if (dis < pDistance)
         {
             arrivalFlag = true;
-            return le.GetLegionPosition();
+            aimPos = le.GetLegionPosition();
         }
-        return pRig.position;
+        aimPos = pRig.position;
     }
 
     /// <summary>
@@ -147,22 +148,17 @@ public class LegionManager : MonoBehaviour
     /// <param name="le"></param>
     /// <param name="leNo"></param>
     /// <returns></returns>
-    private Vector3 LineMove(Legion le, int leNo)
+    private void LineMove(Legion le, int leNo)
     {
         // 隊列出来ているか
         if(legionFlag)
         {
-            if (moveFlag)
-            {
-                return FollowLine();
-            }
+            FollowLine();
             arrivalFlag = true;
-
-            return Vector3.zero;
         }
         else
         {
-            return LineFormation(le, leNo);
+            LineFormation(le, leNo);
         }
     }
 
@@ -170,18 +166,16 @@ public class LegionManager : MonoBehaviour
     /// 隊列しながらPlayerについていく処理
     /// </summary>
     /// <returns>移動する位置</returns>
-    private Vector3 FollowLine()
+    private void FollowLine()
     {
         float dis = legion[0].CompareTheDistanceYouAndOther(pRig.position);
-        Vector3 pos = new Vector3(Mathf.Lerp(lSRb.position.x, lSRb.position.x, 0.5f)
+        aimPos = new Vector3(Mathf.Lerp(lSRb.position.x, lSRb.position.x, 0.5f)
                                            , pRig.position.y
                                            , Mathf.Lerp(lRb.position.z, rRb.position.z, 0.5f));
-        if(dis < pDistance)
+        if (dis < pDistance)
         {
             arrivalFlag = true;
-            return pos;
         }
-        return pos;
     }
 
     /// <summary>
@@ -190,7 +184,7 @@ public class LegionManager : MonoBehaviour
     /// <param name="le">legionオブジェクト</param>
     /// <param name="leNo">もらってきたlegionオブジェクトの番号</param>
     /// <returns>移動する位置</returns>
-    private Vector3 LineFormation(Legion le, int leNo)
+    private void LineFormation(Legion le, int leNo)
     {
         Vector3 pos = le.GetLegionPosition();
         Vector3 sPos = lineScript.GetStartLinePos();
@@ -203,19 +197,21 @@ public class LegionManager : MonoBehaviour
                 // 範囲線の中だったら
                 if (sPos.x <= pos.x && ePos.x >= pos.x)
                 {
-                    return MoveInLine(le, pos, sPos, ePos);
+                    MoveInLine(le, pos, sPos, ePos);
                 }
                 else  // 範囲線の外だったら
                 {
                     // 範囲の真ん中を得る
                     Vector3 dPos = Vector3.Lerp(sPos, ePos, 0.5f);
                     dPos.y = sPos.y;
-                    return MoveOutLine(le, pos, dPos);
+                    MoveOutLine(le, pos, dPos);
                 }
+                break;
             default:  // それ以外だったら
                 Vector3 tPos = legion[leNo - 1].GetLegionPosition();  // ひとつ前のlegionオブジェクト位置をもらう
                 tPos.x += lWidthDistance;  // その横に位置づける
-                return AnotherLegionFormation(le, tPos, MaxValue(sPos.x, ePos.x), leNo);
+                AnotherLegionFormation(le, tPos, MaxValue(sPos.x, ePos.x), leNo);
+                break;
         }
     }
 
@@ -227,22 +223,17 @@ public class LegionManager : MonoBehaviour
     /// <param name="sPos">ラインの引き始めた位置</param>
     /// <param name="ePos">ラインの引き終わった位置</param>
     /// <returns>移動する位置</returns>
-    private Vector3 MoveInLine(Legion le, Vector3 pos, Vector3 sPos, Vector3 ePos)
+    private void MoveInLine(Legion le, Vector3 pos, Vector3 sPos, Vector3 ePos)
     {
         // 引いたラインの左上を得る
-        Vector3 targetPos = new Vector3(MinValue(sPos.x, ePos.x), pos.y, MaxValue(sPos.z, ePos.z));
+        aimPos = new Vector3(MinValue(sPos.x, ePos.x), pos.y, MaxValue(sPos.z, ePos.z));
 
         // ラインの左上にたどり着いたら
-        float dis = le.CompareTheDistanceYouAndOther(targetPos);
+        float dis = le.CompareTheDistanceYouAndOther(aimPos);
         if (dis < distance)
         {
             arrivalFlag = true;
             le.SetLegionFlag(true);
-            return targetPos;
-        }
-        else
-        {
-            return targetPos;
         }
     }
 
@@ -253,16 +244,16 @@ public class LegionManager : MonoBehaviour
     /// <param name="pos">もらってきたlegionオブジェクトの位置</param>
     /// <param name="dPos">ラインの真ん中の位置</param>
     /// <returns>移動する位置</returns>
-    private Vector3 MoveOutLine(Legion le, Vector3 pos, Vector3 dPos)
+    private void MoveOutLine(Legion le, Vector3 pos, Vector3 dPos)
     {
         // ラインの真ん中にたどり着いたら
         float dis = le.CompareTheDistanceYouAndOther(dPos);
         if (dis <= 0)
         {
-            return pos;
+            aimPos = pos;
         }
 
-        return dPos;
+        aimPos = dPos;
     }
 
     /// <summary>
@@ -273,7 +264,7 @@ public class LegionManager : MonoBehaviour
     /// <param name="overPos">ラインの右位置</param>
     /// <param name="leNo">もらってきたlegionオブジェクトの番号</param>
     /// <returns>移動する位置</returns>
-    private Vector3 AnotherLegionFormation(Legion le, Vector3 tPos, float overPos, int leNo)
+    private void AnotherLegionFormation(Legion le, Vector3 tPos, float overPos, int leNo)
     {
         // 今ターゲットにしている位置がラインの右側を超えていたら
         if (tPos.x > overPos)
@@ -299,9 +290,13 @@ public class LegionManager : MonoBehaviour
                 lRb = leftSidelegion.GetComponent<Rigidbody>();
             }
             arrivalFlag = true;
-            le.SetLegionFlag(true);
+            if (legion[leNo - 1].GetLegionFlag())
+            {
+                le.SetLegionFlag(true);
+                arrivalFlag = false;
+            }
         }
-        return tPos;
+        aimPos = tPos;
     }
 
     /// <summary>
@@ -309,6 +304,7 @@ public class LegionManager : MonoBehaviour
     /// </summary>
     private void UpdateValue()
     {
+        aimPos = Vector3.zero;
         moveFlag = false;
         setLineFlag = false;
         legionFlag = false;
@@ -344,6 +340,99 @@ public class LegionManager : MonoBehaviour
             {
                 GyaarKunNo = 0;
             }
+        }
+    }
+
+    public void LegionDestroy(Legion le)
+    {
+        Destroy(le.gameObject);
+        Destroy(le);
+        legion.Remove(le);
+    }
+
+    private void ReleaseLegion()
+    {
+        if (allLegionFlag)
+        {
+            for (int i = 0; i < legion.Count; i++)
+            {
+                if (legion[i].GetLegionFlag())
+                {
+                    legion[i].SetLegionFlag(false);
+                }
+            }
+            allLegionFlag = false;
+            startLegionFlag = false;
+        }
+    }
+
+    private bool CheckMoveFlag()
+    {
+        bool flag = pointScript.GetMoveFlag();
+        if(setLineFlag)
+        {
+            flag = true;
+            pointScript.SetMoveFlag(flag);
+            if (legionFlag && !allLegionFlag)
+            {
+                flag = false;
+                pointScript.SetMoveFlag(flag);
+            }
+        }
+
+        return flag;
+    }
+
+    private bool CheckAllLegionFlag()
+    {
+        for (int i = 0; i < legion.Count; i++)
+        {
+            if (!legion[i].GetLegionFlag())
+            {
+                return false;
+            }
+        }
+        startLegionFlag = true;
+
+        return true;
+    }
+
+    public bool GetMoveFlag()
+    {
+        return moveFlag;
+    }
+
+    public bool GetLineFlag()
+    {
+        return setLineFlag;
+    }
+
+    public bool GetAllLegionFlag()
+    {
+        return allLegionFlag;
+    }
+    
+    public bool GetStartLegionFlag()
+    {
+        return startLegionFlag;
+    }
+
+    public Legion GetStartLegionPtr()
+    {
+        if (legion.Count > 0)
+        {
+            for (int i = 0; i < legion.Count; i++)
+            {
+                if (legion[i] != null)
+                {
+                    return legion[i];
+                }
+            }
+            return null;
+        }
+        else
+        {
+            return null;
         }
     }
 
@@ -421,60 +510,5 @@ public class LegionManager : MonoBehaviour
                 return value2;
             }
         }
-    }
-
-    public void LegionDestroy(Legion le)
-    {
-        Destroy(le.gameObject);
-        Destroy(le);
-        legion.Remove(le);
-    }
-
-    public bool CheckAllLegionFlag()
-    {
-        for (int i = 0; i < legion.Count; i++)
-        {
-            if (!legion[i].GetLegionFlag())
-            {
-                break;
-            }
-        }
-        startLegionFlag = true;
-
-        return true;
-    }
-    
-    public bool GetStartLegionFlag()
-    {
-        return startLegionFlag;
-    }
-
-    public Legion GetStartLegionPtr()
-    {
-        if (legion.Count > 0)
-        {
-            for (int i = 0; i < legion.Count; i++)
-            {
-                if (legion[i] != null)
-                {
-                    return legion[i];
-                }
-            }
-            return null;
-        }
-        else
-        {
-            return null;
-        }
-    }
-
-    public bool CheckCanMove()
-    {
-        if(!allLegionFlag && !startLegionFlag)
-        {
-            moveFlag = false;
-        }
-
-        return moveFlag;
     }
 }

@@ -7,27 +7,27 @@ public class PointManager : MonoBehaviour
     [SerializeField] private LegionManager legionScript;
     [SerializeField] private GameObject point;
     private Transform tf;
-    private int pressButtonCount = 0;
-    private const int longPressCount = 100;
+    private float pressButtonCount = 0;
+    private const float longPressCount = 100f;
     private bool moveFlag = true;
     private bool jumpFlag = false;
 
+    private int debugCount = 0;
+
     enum Mouse
     {
-        None,
+        None = -1,
         Left,
         Right,
         Middle,
-        LongLeft,
-        LongRight,
-        LongMiddle,
-        End
     }
     private Mouse buttonType;
+    private Mouse oldButtonType;
 
     public void Init()
     {
         tf = this.transform;
+        oldButtonType = Mouse.None;
     }
 
     public RaycastHit ManagedUpdate()
@@ -58,35 +58,35 @@ public class PointManager : MonoBehaviour
 
     private void CheckMouseButton()
     {
-        Mouse type = Mouse.None;
+        buttonType = Mouse.None;
         // 左のボタンをクリックしたら
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButton(0))
         {
-            type = Mouse.Left;
+            buttonType = Mouse.Left;
             LeftMouseButton();
         }
         // 右のボタンをクリックしたら
-        else if(Input.GetMouseButtonDown(1))
+        else if(Input.GetMouseButton(1))
         {
-            type = Mouse.Right;
+            buttonType = Mouse.Right;
             RightMouseButton();
         }
         // 真ん中のボタンをクリックしたら
-        else if(Input.GetMouseButtonDown(2))
+        else if(Input.GetMouseButton(2))
         {
-            type = Mouse.Middle;
+            buttonType = Mouse.Middle;
             MiddleMouseButton();
         }
 
-        // 押されたボタンが前回と違うか、何も押されなかったら
-        if (buttonType != type || buttonType == Mouse.None)
+        if(buttonType == Mouse.None || buttonType != oldButtonType)
         {
             pressButtonCount = 0;
         }
-        else  // そうじゃなかったら
+        else
         {
-            pressButtonCount++;
+            pressButtonCount += Time.deltaTime;
         }
+        oldButtonType = buttonType;
     }
 
     private void LeftMouseButton()
@@ -94,27 +94,26 @@ public class PointManager : MonoBehaviour
         // 長押しなら
         if (pressButtonCount > longPressCount)
         {
-            buttonType = Mouse.LongLeft;
             // キャラクターの動きを止める
             if (moveFlag)
             {
                 moveFlag = false;
             }
         }
-        else
+        else if(buttonType != oldButtonType)
         {
             // キャラクターを動かすかどうかを変える
             if (moveFlag)
             {
                 moveFlag = false;
+                Debug.Log(false);
             }
             else
             {
                 moveFlag = true;
+                Debug.Log(true);
             }
         }
-
-        moveFlag = legionScript.CheckCanMove();
     }
 
     private void RightMouseButton()
@@ -122,9 +121,8 @@ public class PointManager : MonoBehaviour
         // 長押しなら
         if (pressButtonCount > longPressCount)
         {
-            buttonType = Mouse.LongRight;
         }
-        else
+        else if (buttonType != oldButtonType)
         {
             if (Input.GetMouseButtonDown(0))
             {
@@ -142,7 +140,9 @@ public class PointManager : MonoBehaviour
         // 長押しなら
         if (pressButtonCount > longPressCount)
         {
-            buttonType = Mouse.LongMiddle;
+        }
+        else if (buttonType != oldButtonType)
+        {
         }
     }
 

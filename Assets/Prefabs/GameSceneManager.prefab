@@ -44,6 +44,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: adfc03cb3cacaff48ac067d785eb6976, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  fpsManager: {fileID: 0}
+  fade: {fileID: 2396633355301961665, guid: b42d08202dcc3ed408d7beb3125a5dd6, type: 3}
   point: {fileID: 0}
   legionManager: {fileID: 8682771735826891390, guid: ed9ef39b857aec84d9203e423bbf5f23, type: 3}
   gameCamera: {fileID: 0}
