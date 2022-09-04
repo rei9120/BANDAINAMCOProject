@@ -21,11 +21,18 @@ public class LegionManager : MonoBehaviour
     private Rigidbody rRb;
     private int GyaarKunNo;
 
+    private List<Vector3> legionPos;
+    private Vector3 middleLegionPos;
     private Vector3 aimPos = Vector3.zero;
     private float distance = 0.1f;
     private float pDistance = 1.5f;
+    private float lineWidthDistance = 1.0f;
+    private float lineHeightDistance = 1.0f;
     private float lWidthDistance = 2.0f;
     private float lHeightDistance = 2.0f;
+
+    private int legionNum = 0;
+    private int rightNo = 0;
 
     private bool moveFlag = false;
     private bool setLineFlag = false;
@@ -51,8 +58,9 @@ public class LegionManager : MonoBehaviour
         lineScript = lineRenderer.GetComponent<MouseLineRenderer>();
         // Legionオブジェクト
         legion = new List<Legion>();
+        legionPos = new List<Vector3>();
         GyaarKunNo = 0;
-        CreateLegion(5);
+        CreateLegion(1);
         leftSideStartLegion = legion[0];
         leftSidelegion = legion[0];
         rightSidelegion = legion[0];
@@ -71,11 +79,22 @@ public class LegionManager : MonoBehaviour
         if (setLineFlag)
         {
             allLegionFlag = CheckAllLegionFlag();
+            if (legionPos.Count != 0)
+            {
+                Vector3 lPos = legion[0].GetLegionPosition();
+                Vector3 rPos = legion[rightNo].GetLegionPosition();
+                // 一番左上と右上からその真ん中を得る
+                middleLegionPos = new Vector3(Mathf.Lerp(lPos.x, rPos.x, 0.5f), lPos.y, Mathf.Lerp(lPos.z, rPos.z, 0.5f));
+            }
         }
         else
         {
             ReleaseLegion();
+            legionNum = 0;
+            rightNo = 0;
         }
+
+        Debug.Log(allLegionFlag);
 
         // Legionオブジェクトの行動を更新する
         for (int i = 0; i < legion.Count; i++)
@@ -90,17 +109,19 @@ public class LegionManager : MonoBehaviour
 
             if (legion[i] != null)
             {
-                // 行動パターンを決める
-                legionFlag = legion[i].GetLegionFlag();
-                legion[i].SetMoveFlag(CheckMoveFlag());
-                DecideLegionMove(legion[i], i);
-                legion[i].ManagedUpdate(aimPos, deltaTime);
+                CheckLegionType(legion[i]);
+                Vector3 pos = Vector3.zero;
+                if(legionPos.Count != 0)
+                {
+                    pos = legionPos[i];
+                }
+                legion[i].ManagedUpdate(pos, middleLegionPos, deltaTime);
             }
         }
 
         if(Input.GetKeyDown(KeyCode.Backspace))
         {
-            LegionDestroy(legion[0]);
+            LegionDestroy(legion[0], 0);
         }
     }
 
@@ -124,6 +145,99 @@ public class LegionManager : MonoBehaviour
                 break;
         }
         le.SetArrivalFlag(arrivalFlag);
+    }
+
+    private void CheckLegionType(Legion le)
+    {
+        Legion.LegionType type = le.GetLegionType();
+        switch(type)
+        {
+            case Legion.LegionType.Individual:  // 個々
+                if (lineScript.GetSetLineFlag())
+                {
+                    if (type == Legion.LegionType.Individual)
+                    {
+                        DecideLegionPosition();
+                    }
+                    le.SetMoveFlag(true);
+                    le.SetLegionType(Legion.LegionType.Gather);
+                }
+                le.SetMoveFlag(pointScript.GetMoveFlag());
+                break;
+            case Legion.LegionType.Gather:  // 集合中
+                le.SetMoveFlag(true);  // 集合中なのでプレイヤーにかかわらず動くようにする
+                break;
+            case Legion.LegionType.Legion:  // 軍団
+                le.SetMoveFlag(pointScript.GetMoveFlag());
+                break;
+            case Legion.LegionType.Chase:  // 追跡中
+                le.SetMoveFlag(true);  // 軍団に追いつこうとしているので動くようにする
+                break;
+            case Legion.LegionType.StandBy:  // 待機中
+                le.SetMoveFlag(false);
+                if(allLegionFlag)
+                {
+                    le.SetLegionType(Legion.LegionType.Legion);
+                    pointScript.SetMoveFlag(false);  // 軍団が完成した直後に動かないようにする
+                }
+                break;
+        }
+    }
+
+    private void DecideLegionPosition()
+    {
+        Vector3 sPos = lineScript.GetStartLinePos();
+        Vector3 ePos = lineScript.GetEndLinePos();
+        // 一番左上のポジション
+        Vector3 leftUpPos = new Vector3(MinValue(sPos.x, ePos.x), legion[0].GetLegionPosition().y, MaxValue(sPos.z, ePos.z));
+        // 右のラインx位置
+        float rightLinePos = MaxValue(sPos.x, ePos.x);
+
+        Vector3 leftLegionPos = Vector3.zero;
+
+        if (legionPos.Count == 0)
+        {
+            // 一番左のLegionの位置(ここでは先頭)
+            leftLegionPos = new Vector3(leftUpPos.x + lineWidthDistance, leftUpPos.y, leftUpPos.z - lineHeightDistance);
+            legionPos.Add(leftLegionPos);
+        }
+
+        Vector3 nextLeftPos = Vector3.zero;
+        if (legionNum != 0)
+        {
+            nextLeftPos = legion[legionNum - 1].GetLegionPosition();
+        }
+
+        // もし始めに数えた時と数が変わっていたら
+        if (legionNum != legion.Count)
+        {
+            // 先頭は決まったので次のLegionから位置決めを行う
+            for (int i = 1; i < legion.Count - legionNum; i++)
+            {
+                // 次の位置は左のLegionの隣
+                Vector3 nextLegionPos = nextLeftPos + new Vector3(lWidthDistance, 0.0f, 0.0f);
+                // 並ぶ位置が右のラインを超えていたら
+                if (nextLegionPos.x > rightLinePos)
+                {
+                    // 一番左にいるLegionの後ろに変更
+                    nextLegionPos = leftLegionPos - new Vector3(0.0f, 0.0f, lHeightDistance);
+                    // 並ぶ列が変わったので一番左にいるLegionもその列のLegionに変更
+                    leftLegionPos = nextLegionPos;
+                    if(rightNo == 0)
+                    {
+                        rightNo = i - 1;
+                    }
+                }
+                nextLeftPos = nextLegionPos;
+                legionPos.Add(nextLegionPos);
+            }
+            legionNum = legion.Count;  // 軍団を作ったときに数を数えておく
+
+            Vector3 lPos = legionPos[0];
+            Vector3 rPos = legionPos[rightNo];
+            // 一番左上と右上からその真ん中を得る
+            middleLegionPos = new Vector3(Mathf.Lerp(lPos.x, rPos.x, 0.5f), lPos.y, Mathf.Lerp(lPos.z, rPos.z, 0.5f));
+        }
     }
 
     /// <summary>
@@ -309,7 +423,6 @@ public class LegionManager : MonoBehaviour
         setLineFlag = false;
         legionFlag = false;
         arrivalFlag = false;
-        allLegionFlag = false;
         moveFlag = pointScript.GetMoveFlag();
         setLineFlag = lineScript.GetSetLineFlag();
     }
@@ -341,13 +454,20 @@ public class LegionManager : MonoBehaviour
                 GyaarKunNo = 0;
             }
         }
+
+        Legion.LegionType type = legion[0].GetLegionType();
+        if (type != Legion.LegionType.Individual)
+        {
+            DecideLegionPosition();
+        }
     }
 
-    public void LegionDestroy(Legion le)
+    public void LegionDestroy(Legion le, int leNo)
     {
         Destroy(le.gameObject);
         Destroy(le);
         legion.Remove(le);
+        legionPos.RemoveAt(leNo);
     }
 
     private void ReleaseLegion()
@@ -355,14 +475,16 @@ public class LegionManager : MonoBehaviour
         if (allLegionFlag)
         {
             for (int i = 0; i < legion.Count; i++)
-            {
-                if (legion[i].GetLegionFlag())
-                {
-                    legion[i].SetLegionFlag(false);
-                }
+            { 
+                legion[i].SetLegionType(Legion.LegionType.Individual);
             }
             allLegionFlag = false;
-            startLegionFlag = false;
+        }
+
+        if(legionPos.Count != 0)
+        {
+            legionPos.Clear();
+            middleLegionPos = Vector3.zero;
         }
     }
 
@@ -385,15 +507,17 @@ public class LegionManager : MonoBehaviour
 
     private bool CheckAllLegionFlag()
     {
-        for (int i = 0; i < legion.Count; i++)
+        if (legion[0].GetLegionType() != Legion.LegionType.Legion)
         {
-            if (!legion[i].GetLegionFlag())
+            for (int i = 0; i < legion.Count; i++)
             {
-                return false;
+                // 待機中になっているか、追跡中じゃなければ軍団になっていない
+                if (legion[i].GetLegionType() == Legion.LegionType.Gather)
+                {
+                    return false;
+                }
             }
         }
-        startLegionFlag = true;
-
         return true;
     }
 
