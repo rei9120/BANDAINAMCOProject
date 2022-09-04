@@ -42,7 +42,7 @@ public class PointManager : MonoBehaviour
             {
                 tf.position = hitInfo.point;
                 Vector3 pos = tf.position;
-                pos.y = 0.5f + hitInfo.point.y;
+                pos.y = 1.5f + hitInfo.point.y;
                 tf.position = pos;
             }
         }

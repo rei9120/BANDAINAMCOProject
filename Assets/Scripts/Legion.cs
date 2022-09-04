@@ -19,11 +19,24 @@ public class Legion : MonoBehaviour
     private Vector3 jumpForce = new Vector3(0.0f, 5.0f, 0.0f);
 
     private float speed = 10f;
+    private float distance = 0.02f;
 
     private bool moveFlag = false;
     private bool jumpFlag = false;
     private bool legionFlag = false;
     private bool arrivalFlag = false;
+
+    int layer = 0;
+
+    public enum LegionType
+    {
+        Individual,  // 個々
+        Gather,      // 集合中
+        Legion,      // 軍団
+        StandBy,     // 待機中
+        Chase,       // 追跡中
+    }
+    private LegionType legionType;  // Legionの状態
 
     public enum Item
     {
@@ -31,7 +44,12 @@ public class Legion : MonoBehaviour
         r,
         normal,
     };
-    Item itemType;
+    private Item itemType;
+
+    public void Awake()
+    {
+        layer = LayerMask.NameToLayer("Legion");
+    }
 
     public void Init(GameObject p, GameObject le,　Vector3 pos)
     {
@@ -43,9 +61,10 @@ public class Legion : MonoBehaviour
         rig.position = pos + new Vector3(0.0f, rig.position.y, -2.0f);
         legionScript = le.GetComponent<LegionManager>();
         anim = this.GetComponent<Animator>();
+        legionType = LegionType.Individual;
     }
 
-    public void ManagedUpdate(Vector3 targetPos, float deltaTime)
+    public void ManagedUpdate(Vector3 targetPos, Vector3 anchorPos, float deltaTime)
     {
         // 必要な値を更新または初期化する
         UpdateValue();
@@ -55,31 +74,34 @@ public class Legion : MonoBehaviour
             rig.AddForce(jumpForce, ForceMode.Impulse);
         }
 
-        Move(targetPos, deltaTime);
+        Move(targetPos, anchorPos, deltaTime);
 
         Animation();
     }
 
-    private void Move(Vector3 tPos, float deltaTime)
+    private void Move(Vector3 tPos, Vector3 aPos, float deltaTime)
     {
-        switch (legionFlag)
+        switch (legionType)
         {
-            case true:
-                MoveFollowLegion(tPos, deltaTime);
+            case LegionType.Individual:
+                MoveFollowPlayer(deltaTime);
                 break;
-            case false:
-                if (legionScript.GetLineFlag())
-                {
-                    MoveFollowLine(tPos, deltaTime);
-                }
-                else
-                {
-                    MoveFollowPlayer(deltaTime);
-                }
+            case LegionType.Gather:
+                Physics.IgnoreLayerCollision(layer, layer, true);
+                MoveGatherLine(tPos, deltaTime);
+                break;
+            case LegionType.Legion:
+                Physics.IgnoreLayerCollision(layer, layer, false);
+                MoveFollowLegion(aPos, deltaTime);
+                break;
+            case LegionType.Chase:
+                MoveGatherLine(tPos, deltaTime);
+                break;
+            case LegionType.StandBy:
                 break;
         }
 
-        if (legionScript.GetMoveFlag())
+        if (moveFlag)
         {
             rig.position += velocity;
         }
@@ -87,25 +109,78 @@ public class Legion : MonoBehaviour
 
     public void MoveFollowPlayer(float deltaTime)
     {
+        float dis = CompareTheDistanceYouAndOther(pTf.position);
         tf.LookAt(pTf);
-        velocity = tf.forward * speed * deltaTime;
+        Quaternion rota = tf.localRotation;
+        rota.x = 0.0f;
+        rota.z = 0.0f;
+        tf.localRotation = rota;
+        if (dis < distance)
+        {
+            arrivalFlag = true;
+        }
+        else
+        {
+            Vector3 forward = tf.forward;
+            forward.y = 0.0f;
+            velocity = forward * speed * deltaTime;
+            arrivalFlag = false;
+        }
     }
 
-    public void MoveFollowLegion(Vector3 tPos, float deltaTime)
+    public void MoveFollowLegion(Vector3 aPos, float deltaTime)
     {
-        tf.localRotation = Quaternion.LookRotation(pTf.position - tPos);
-        velocity = tf.forward * speed * deltaTime;
+        float dis = CompareTheDistanceYouAndOther(pTf.position);
+        tf.localRotation = Quaternion.LookRotation(pTf.position - aPos);
+        Quaternion rota = tf.localRotation;
+        rota.x = 0.0f;
+        rota.z = 0.0f;
+        tf.localRotation = rota;
+        if (dis < distance)
+        {
+            arrivalFlag = true;
+        }
+        else
+        {
+            Vector3 forward = tf.forward;
+            forward.y = 0.0f;
+            velocity = forward * speed * deltaTime;
+            arrivalFlag = false;
+        }
     }
 
-    public void MoveFollowLine(Vector3 tPos, float deltaTime)
+    public void MoveGatherLine(Vector3 tPos, float deltaTime)
     {
+        float dis = CompareTheDistanceYouAndOther(tPos);
         tf.LookAt(tPos);
-        velocity = tf.forward * speed * deltaTime;
+        Quaternion rota = tf.localRotation;
+        rota.x = 0.0f;
+        rota.z = 0.0f;
+        tf.localRotation = rota;
+        if (dis < distance)
+        {
+            arrivalFlag = true;
+            if (legionScript.GetAllLegionFlag())
+            {
+                legionType = LegionType.Legion;
+            }
+            else
+            {
+                legionType = LegionType.StandBy;  // 待機中に変更
+            }
+        }
+        else
+        {
+            Vector3 forward = tf.forward;
+            forward.y = 0.0f;
+            velocity = forward * speed * deltaTime;
+            arrivalFlag = false;
+        }
     }
 
     private void Animation()
     {
-        if (legionScript.GetMoveFlag())
+        if (moveFlag)
         {
             anim.SetBool("ArrivalFlag", arrivalFlag);
         }
@@ -153,6 +228,17 @@ public class Legion : MonoBehaviour
     {
         return itemType;
     }
+
+    public void SetLegionType(LegionType type)
+    {
+        legionType = type;
+    }
+
+    public LegionType GetLegionType()
+    {
+        return legionType;
+    }
+
     public void SetItemType(Item type)
     {
         itemType = type;

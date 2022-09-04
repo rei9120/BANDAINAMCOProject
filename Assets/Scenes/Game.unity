@@ -324,6 +324,22 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 607537743673805658, guid: ed9ef39b857aec84d9203e423bbf5f23, type: 3}
+      propertyPath: lWidthDistance
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 607537743673805658, guid: ed9ef39b857aec84d9203e423bbf5f23, type: 3}
+      propertyPath: lHeightDistance
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 607537743673805658, guid: ed9ef39b857aec84d9203e423bbf5f23, type: 3}
+      propertyPath: lineWidthDistance
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 607537743673805658, guid: ed9ef39b857aec84d9203e423bbf5f23, type: 3}
+      propertyPath: lineHeightDistance
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4725399991510978482, guid: ed9ef39b857aec84d9203e423bbf5f23, type: 3}
       propertyPath: m_RootOrder
       value: 11
@@ -2404,7 +2420,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1617922020503536712, guid: a1dc9c4561183984db7f08bd6885aabe, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1617922020503536712, guid: a1dc9c4561183984db7f08bd6885aabe, type: 3}
       propertyPath: m_TagString
