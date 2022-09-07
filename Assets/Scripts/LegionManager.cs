@@ -22,23 +22,22 @@ public class LegionManager : MonoBehaviour
     private int GyaarKunNo;
 
     private List<Vector3> legionPos;
-    private Vector3 middleLegionPos;
-    private Vector3 aimPos = Vector3.zero;
-    private float distance = 0.1f;
-    private float pDistance = 1.5f;
-    private float lineWidthDistance = 1.0f;
-    private float lineHeightDistance = 1.0f;
-    private float lWidthDistance = 2.0f;
-    private float lHeightDistance = 2.0f;
+    private Vector3 middleLegionPos = Vector3.zero;
+    private Vector3 leftLegionPos = Vector3.zero;
+    private float overLinePos = 0.0f;
+    private float rightLineDis = 0.0f;
+    private float lineWidthDistance = 0.5f;
+    private float lineHeightDistance = 0.5f;
+    private float lWidthDistance = 0.1f;
+    private float lHeightDistance = 0.1f;
 
     private int legionNum = 0;
-    private int rightNo = 0;
+    private int rightNo = -1;
+    private int leftNo = 0;
+    private int chaseleftNo = 0;
 
     private bool moveFlag = false;
     private bool setLineFlag = false;
-    private bool arrivalFlag = false;
-    private bool legionFlag = false;
-    private bool sideFlag = false;
     private bool allLegionFlag = false;
     private bool startLegionFlag = false;
 
@@ -60,7 +59,7 @@ public class LegionManager : MonoBehaviour
         legion = new List<Legion>();
         legionPos = new List<Vector3>();
         GyaarKunNo = 0;
-        CreateLegion(1);
+        CreateLegion(5);
         leftSideStartLegion = legion[0];
         leftSidelegion = legion[0];
         rightSidelegion = legion[0];
@@ -79,22 +78,34 @@ public class LegionManager : MonoBehaviour
         if (setLineFlag)
         {
             allLegionFlag = CheckAllLegionFlag();
-            if (legionPos.Count != 0)
+            if (rightNo != -1)
             {
                 Vector3 lPos = legion[0].GetLegionPosition();
                 Vector3 rPos = legion[rightNo].GetLegionPosition();
                 // 一番左上と右上からその真ん中を得る
                 middleLegionPos = new Vector3(Mathf.Lerp(lPos.x, rPos.x, 0.5f), lPos.y, Mathf.Lerp(lPos.z, rPos.z, 0.5f));
             }
+            else
+            {
+                Vector3 lPos = legion[0].GetLegionPosition();
+                Vector3 rPos = legion[legion.Count - 1].GetLegionPosition();
+                // 一番左上と右上からその真ん中を得る
+                middleLegionPos = new Vector3(Mathf.Lerp(lPos.x, rPos.x, 0.5f), lPos.y, Mathf.Lerp(lPos.z, rPos.z, 0.5f));
+            }
         }
         else
         {
-            ReleaseLegion();
-            legionNum = 0;
-            rightNo = 0;
+            if (allLegionFlag)
+            {
+                ReleaseLegion();
+                legionNum = 0;
+                rightNo = -1;
+                middleLegionPos = Vector3.zero;
+                leftLegionPos = Vector3.zero;
+                rightLineDis = 0.0f;
+                overLinePos = 0.0f;
+            }
         }
-
-        Debug.Log(allLegionFlag);
 
         // Legionオブジェクトの行動を更新する
         for (int i = 0; i < legion.Count; i++)
@@ -109,14 +120,30 @@ public class LegionManager : MonoBehaviour
 
             if (legion[i] != null)
             {
-                CheckLegionType(legion[i]);
+                CheckLegionType(legion[i], i);
                 Vector3 pos = Vector3.zero;
-                if(legionPos.Count != 0)
+                legionNum = legion.Count;
+               
+                if (legionPos.Count != 0)
                 {
                     pos = legionPos[i];
                 }
                 legion[i].ManagedUpdate(pos, middleLegionPos, deltaTime);
             }
+        }
+
+        if (legionPos.Count != 0)
+        {
+            overLinePos = legion[0].GetLegionPosition().x + rightLineDis;
+        }
+
+        if (setLineFlag && legion[legion.Count - 1].GetLegionType() == Legion.LegionType.Chase)
+        {
+            chaseleftNo = leftNo;
+        }
+        else if(setLineFlag && legion[legion.Count - 1].GetLegionType() != Legion.LegionType.Chase)
+        {
+            leftNo = chaseleftNo;
         }
 
         if(Input.GetKeyDown(KeyCode.Backspace))
@@ -125,29 +152,7 @@ public class LegionManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Legionオブジェクトの行動パターンを決める処理
-    /// </summary>
-    /// <param name="le">legionオブジェクト</param>
-    /// <param name="leNo">貰ってきたlegionオブジェクトの番号</param>
-    /// <returns>移動する位置</returns>
-    private void DecideLegionMove(Legion le, int leNo)
-    {
-        // ラインが引かれているか
-        switch(setLineFlag)
-        {
-            case true:
-                LineMove(le, leNo);  // ラインに対しての行動を行う
-                break;
-            case false:
-                sideFlag = false;
-                FollowPlayer(le);  // プレイヤーについていく
-                break;
-        }
-        le.SetArrivalFlag(arrivalFlag);
-    }
-
-    private void CheckLegionType(Legion le)
+    private void CheckLegionType(Legion le, int leNo)
     {
         Legion.LegionType type = le.GetLegionType();
         switch(type)
@@ -155,10 +160,7 @@ public class LegionManager : MonoBehaviour
             case Legion.LegionType.Individual:  // 個々
                 if (lineScript.GetSetLineFlag())
                 {
-                    if (type == Legion.LegionType.Individual)
-                    {
-                        DecideLegionPosition();
-                    }
+                    DecideGatherLegionPosition(leNo);
                     le.SetMoveFlag(true);
                     le.SetLegionType(Legion.LegionType.Gather);
                 }
@@ -171,6 +173,7 @@ public class LegionManager : MonoBehaviour
                 le.SetMoveFlag(pointScript.GetMoveFlag());
                 break;
             case Legion.LegionType.Chase:  // 追跡中
+                DecideChaseLegionPosition(leNo);
                 le.SetMoveFlag(true);  // 軍団に追いつこうとしているので動くようにする
                 break;
             case Legion.LegionType.StandBy:  // 待機中
@@ -184,7 +187,7 @@ public class LegionManager : MonoBehaviour
         }
     }
 
-    private void DecideLegionPosition()
+    private void DecideGatherLegionPosition(int leNo)
     {
         Vector3 sPos = lineScript.GetStartLinePos();
         Vector3 ePos = lineScript.GetEndLinePos();
@@ -193,224 +196,91 @@ public class LegionManager : MonoBehaviour
         // 右のラインx位置
         float rightLinePos = MaxValue(sPos.x, ePos.x);
 
-        Vector3 leftLegionPos = Vector3.zero;
-
-        if (legionPos.Count == 0)
+        // 先頭の位置決め
+        if (leNo == 0)
         {
             // 一番左のLegionの位置(ここでは先頭)
             leftLegionPos = new Vector3(leftUpPos.x + lineWidthDistance, leftUpPos.y, leftUpPos.z - lineHeightDistance);
+            rightLineDis = rightLinePos - leftLegionPos.x;
             legionPos.Add(leftLegionPos);
-        }
-
-        Vector3 nextLeftPos = Vector3.zero;
-        if (legionNum != 0)
-        {
-            nextLeftPos = legion[legionNum - 1].GetLegionPosition();
-        }
-
-        // もし始めに数えた時と数が変わっていたら
-        if (legionNum != legion.Count)
-        {
-            // 先頭は決まったので次のLegionから位置決めを行う
-            for (int i = 1; i < legion.Count - legionNum; i++)
-            {
-                // 次の位置は左のLegionの隣
-                Vector3 nextLegionPos = nextLeftPos + new Vector3(lWidthDistance, 0.0f, 0.0f);
-                // 並ぶ位置が右のラインを超えていたら
-                if (nextLegionPos.x > rightLinePos)
-                {
-                    // 一番左にいるLegionの後ろに変更
-                    nextLegionPos = leftLegionPos - new Vector3(0.0f, 0.0f, lHeightDistance);
-                    // 並ぶ列が変わったので一番左にいるLegionもその列のLegionに変更
-                    leftLegionPos = nextLegionPos;
-                    if(rightNo == 0)
-                    {
-                        rightNo = i - 1;
-                    }
-                }
-                nextLeftPos = nextLegionPos;
-                legionPos.Add(nextLegionPos);
-            }
-            legionNum = legion.Count;  // 軍団を作ったときに数を数えておく
-
-            Vector3 lPos = legionPos[0];
-            Vector3 rPos = legionPos[rightNo];
-            // 一番左上と右上からその真ん中を得る
-            middleLegionPos = new Vector3(Mathf.Lerp(lPos.x, rPos.x, 0.5f), lPos.y, Mathf.Lerp(lPos.z, rPos.z, 0.5f));
-        }
-    }
-
-    /// <summary>
-    /// Playerについていく処理
-    /// </summary>
-    /// <param name="le">legionオブジェクト</param>
-    /// <returns>移動する位置</returns>
-    private void FollowPlayer(Legion le)
-    {
-        float dis = le.CompareTheDistanceYouAndOther(pRig.position);
-        if (dis < pDistance)
-        {
-            arrivalFlag = true;
-            aimPos = le.GetLegionPosition();
-        }
-        aimPos = pRig.position;
-    }
-
-    /// <summary>
-    /// ラインに対してどう動くかを決める
-    /// </summary>
-    /// <param name="le"></param>
-    /// <param name="leNo"></param>
-    /// <returns></returns>
-    private void LineMove(Legion le, int leNo)
-    {
-        // 隊列出来ているか
-        if(legionFlag)
-        {
-            FollowLine();
-            arrivalFlag = true;
+            leftNo = -1;
+            overLinePos = leftLegionPos.x + rightLineDis;
         }
         else
         {
-            LineFormation(le, leNo);
-        }
-    }
+            Vector3 nextLeftPos = legionPos[leNo - 1];
 
-    /// <summary>
-    /// 隊列しながらPlayerについていく処理
-    /// </summary>
-    /// <returns>移動する位置</returns>
-    private void FollowLine()
-    {
-        float dis = legion[0].CompareTheDistanceYouAndOther(pRig.position);
-        aimPos = new Vector3(Mathf.Lerp(lSRb.position.x, lSRb.position.x, 0.5f)
-                                           , pRig.position.y
-                                           , Mathf.Lerp(lRb.position.z, rRb.position.z, 0.5f));
-        if (dis < pDistance)
-        {
-            arrivalFlag = true;
-        }
-    }
-
-    /// <summary>
-    /// 引かれたラインに隊列する処理
-    /// </summary>
-    /// <param name="le">legionオブジェクト</param>
-    /// <param name="leNo">もらってきたlegionオブジェクトの番号</param>
-    /// <returns>移動する位置</returns>
-    private void LineFormation(Legion le, int leNo)
-    {
-        Vector3 pos = le.GetLegionPosition();
-        Vector3 sPos = lineScript.GetStartLinePos();
-        Vector3 ePos = lineScript.GetEndLinePos();
-        
-        // legionオブジェクトが先頭かその他で処理を変える
-        switch (leNo)
-        {
-            case 0:  // 先頭だったら
-                // 範囲線の中だったら
-                if (sPos.x <= pos.x && ePos.x >= pos.x)
+            // 次の位置は左のLegionの隣
+            Vector3 nextLegionPos = nextLeftPos + new Vector3(lWidthDistance, 0.0f, 0.0f);
+            // 並ぶ位置が右のラインを超えていたら
+            if (nextLegionPos.x > overLinePos - lineWidthDistance)
+            {
+                // 一番左にいるLegionの後ろに変更
+                nextLegionPos = leftLegionPos - new Vector3(0.0f, 0.0f, lHeightDistance);
+                // 並ぶ列が変わったので一番左にいるLegionもその列のLegionに変更
+                leftLegionPos = nextLegionPos;
+                if (rightNo == -1)
                 {
-                    MoveInLine(le, pos, sPos, ePos);
+                    rightNo = leNo - 1;
                 }
-                else  // 範囲線の外だったら
-                {
-                    // 範囲の真ん中を得る
-                    Vector3 dPos = Vector3.Lerp(sPos, ePos, 0.5f);
-                    dPos.y = sPos.y;
-                    MoveOutLine(le, pos, dPos);
-                }
-                break;
-            default:  // それ以外だったら
-                Vector3 tPos = legion[leNo - 1].GetLegionPosition();  // ひとつ前のlegionオブジェクト位置をもらう
-                tPos.x += lWidthDistance;  // その横に位置づける
-                AnotherLegionFormation(le, tPos, MaxValue(sPos.x, ePos.x), leNo);
-                break;
+                leftNo = leNo;
+            }
+            legionPos.Add(nextLegionPos);
         }
+
+        chaseleftNo = leftNo;
+
+        Vector3 lPos = legionPos[0];
+        Vector3 rPos = Vector3.zero;
+        if (rightNo != -1)
+        {
+            rPos = legionPos[rightNo];
+        }
+        else
+        {
+            rPos = legionPos[0];
+        }
+        // 一番左上と右上からその真ん中を得る
+        middleLegionPos = new Vector3(Mathf.Lerp(lPos.x, rPos.x, 0.5f), lPos.y, Mathf.Lerp(lPos.z, rPos.z, 0.5f));
     }
 
-    /// <summary>
-    /// ラインに入った時の処理
-    /// </summary>
-    /// <param name="le">legionオブジェクト</param>
-    /// <param name="pos">もらってきたlegionオブジェクトの位置</param>
-    /// <param name="sPos">ラインの引き始めた位置</param>
-    /// <param name="ePos">ラインの引き終わった位置</param>
-    /// <returns>移動する位置</returns>
-    private void MoveInLine(Legion le, Vector3 pos, Vector3 sPos, Vector3 ePos)
+    private void DecideChaseLegionPosition(int leNo)
     {
-        // 引いたラインの左上を得る
-        aimPos = new Vector3(MinValue(sPos.x, ePos.x), pos.y, MaxValue(sPos.z, ePos.z));
-
-        // ラインの左上にたどり着いたら
-        float dis = le.CompareTheDistanceYouAndOther(aimPos);
-        if (dis < distance)
+        Vector3 nextLeftPos = Vector3.zero;
+        if (legion[leNo - 1].GetLegionType() != Legion.LegionType.Chase)
         {
-            arrivalFlag = true;
-            le.SetLegionFlag(true);
+            nextLeftPos = legion[leNo - 1].GetLegionPosition();
         }
-    }
-
-    /// <summary>
-    /// ラインの外にいるときの処理
-    /// </summary>
-    /// <param name="le">legionオブジェクト</param>
-    /// <param name="pos">もらってきたlegionオブジェクトの位置</param>
-    /// <param name="dPos">ラインの真ん中の位置</param>
-    /// <returns>移動する位置</returns>
-    private void MoveOutLine(Legion le, Vector3 pos, Vector3 dPos)
-    {
-        // ラインの真ん中にたどり着いたら
-        float dis = le.CompareTheDistanceYouAndOther(dPos);
-        if (dis <= 0)
+        else
         {
-            aimPos = pos;
+            nextLeftPos = legionPos[leNo - 1];
         }
 
-        aimPos = dPos;
-    }
+        // 次の位置は左のLegionの隣
+        Vector3 nextLegionPos = nextLeftPos + new Vector3(lWidthDistance, 0.0f, 0.0f);
 
-    /// <summary>
-    /// 先頭以外のlegionオブジェクトの行動処理
-    /// </summary>
-    /// <param name="le">legionオブジェクト</param>
-    /// <param name="tPos">自分よりひとつ前のlegionオブジェクトの位置の横</param>
-    /// <param name="overPos">ラインの右位置</param>
-    /// <param name="leNo">もらってきたlegionオブジェクトの番号</param>
-    /// <returns>移動する位置</returns>
-    private void AnotherLegionFormation(Legion le, Vector3 tPos, float overPos, int leNo)
-    {
-        // 今ターゲットにしている位置がラインの右側を超えていたら
-        if (tPos.x > overPos)
+        // 並ぶ位置が右のラインを超えていたら
+        if (nextLegionPos.x > overLinePos - lineWidthDistance)
         {
-            if (rightSidelegion != legion[leNo - 1])
+            // 隊列を始める前の列のもっとも左のキャラの位置をとる
+            if (chaseleftNo <= 0)
             {
-                rightSidelegion = legion[leNo - 1];
-                rRb = rightSidelegion.GetComponent<Rigidbody>();
+                leftLegionPos = legion[0].GetLegionPosition();
             }
-            // 最も左側のlegionオブジェクトの後ろにターゲットの位置を変更
-            tPos = leftSidelegion.GetLegionPosition();
-            tPos.z -= lHeightDistance;
+            else
+            {
+                leftLegionPos = legion[chaseleftNo].GetLegionPosition();
+            }
+            // 一番左にいるLegionの後ろに変更
+            nextLegionPos = leftLegionPos - new Vector3(0.0f, 0.0f, lHeightDistance);
+            if (rightNo == -1)
+            {
+                rightNo = leNo - 1;
+            }
+            chaseleftNo = leNo;
         }
 
-        // ターゲットの位置にたどり着いたら
-        float dis = le.CompareTheDistanceYouAndOther(tPos);
-        if (dis < distance)
-        {
-            if (!sideFlag)
-            {
-                sideFlag = true;
-                leftSidelegion = le;
-                lRb = leftSidelegion.GetComponent<Rigidbody>();
-            }
-            arrivalFlag = true;
-            if (legion[leNo - 1].GetLegionFlag())
-            {
-                le.SetLegionFlag(true);
-                arrivalFlag = false;
-            }
-        }
-        aimPos = tPos;
+        legionPos[leNo] = nextLegionPos;
     }
 
     /// <summary>
@@ -418,11 +288,8 @@ public class LegionManager : MonoBehaviour
     /// </summary>
     private void UpdateValue()
     {
-        aimPos = Vector3.zero;
         moveFlag = false;
         setLineFlag = false;
-        legionFlag = false;
-        arrivalFlag = false;
         moveFlag = pointScript.GetMoveFlag();
         setLineFlag = lineScript.GetSetLineFlag();
     }
@@ -433,10 +300,18 @@ public class LegionManager : MonoBehaviour
     /// <param name="num">生成してほしい数</param>
     public void CreateLegion(int num)
     {
+        Legion.LegionType type = Legion.LegionType.Individual;
+        if (legion.Count != 0)
+        {
+            type = legion[0].GetLegionType();
+        }
+
+        int beforeCount = legion.Count;
         for (int i = 0; i < num; i++)
         {
             // prefabからオブジェクトを生成する
             GameObject obj = Instantiate(legionPrefab[GyaarKunNo]);
+
             // 生成したオブジェクトからLegionスクリプトの情報をもらう
             legion.Add(obj.GetComponent<Legion>());
             if (legion.Count == 1)  // 一体目だったら
@@ -453,12 +328,12 @@ public class LegionManager : MonoBehaviour
             {
                 GyaarKunNo = 0;
             }
-        }
 
-        Legion.LegionType type = legion[0].GetLegionType();
-        if (type != Legion.LegionType.Individual)
-        {
-            DecideLegionPosition();
+            if (type != Legion.LegionType.Individual)
+            {
+                legion[beforeCount + i].SetLegionType(Legion.LegionType.Chase);
+                legionPos.Add(legion[beforeCount + i].GetLegionPosition());
+            }
         }
     }
 
@@ -472,37 +347,17 @@ public class LegionManager : MonoBehaviour
 
     private void ReleaseLegion()
     {
-        if (allLegionFlag)
+        for (int i = 0; i < legion.Count; i++)
         {
-            for (int i = 0; i < legion.Count; i++)
-            { 
-                legion[i].SetLegionType(Legion.LegionType.Individual);
-            }
-            allLegionFlag = false;
+            legion[i].SetLegionType(Legion.LegionType.Individual);
         }
+        allLegionFlag = false;
 
         if(legionPos.Count != 0)
         {
             legionPos.Clear();
             middleLegionPos = Vector3.zero;
         }
-    }
-
-    private bool CheckMoveFlag()
-    {
-        bool flag = pointScript.GetMoveFlag();
-        if(setLineFlag)
-        {
-            flag = true;
-            pointScript.SetMoveFlag(flag);
-            if (legionFlag && !allLegionFlag)
-            {
-                flag = false;
-                pointScript.SetMoveFlag(flag);
-            }
-        }
-
-        return flag;
     }
 
     private bool CheckAllLegionFlag()
@@ -514,11 +369,18 @@ public class LegionManager : MonoBehaviour
                 // 待機中になっているか、追跡中じゃなければ軍団になっていない
                 if (legion[i].GetLegionType() == Legion.LegionType.Gather)
                 {
+                    chaseleftNo = leftNo;
                     return false;
                 }
             }
         }
+        leftNo = chaseleftNo;
         return true;
+    }
+
+    public void AddLegionPos(Vector3 pos)
+    {
+        legionPos.Add(pos);
     }
 
     public bool GetMoveFlag()
