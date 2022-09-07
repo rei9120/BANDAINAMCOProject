@@ -77,7 +77,7 @@ public class GameSceneManager : MonoBehaviour
 
     private void Game(float deltaTime)
     {
-        hitInfo = pointScript.ManagedUpdate();
+        hitInfo = pointScript.ManagedUpdate(deltaTime);
         mouseLineScript.ManagedUpdate(hitInfo);
         obstacleScript.ManagedUpdate();
         legionScript.ManagedUpdate(deltaTime);

@@ -93,7 +93,7 @@ public class MouseLineRenderer : MonoBehaviour
 				drawStartFlag = true;
 			}
 			nextPos = info.point;
-			nextPos.y = startPos.y;  // ‚‚³‚Í•Ï‚¦‚È‚¢
+			nextPos.y = info.point.y + 0.1f;  // ‚‚³‚Í•Ï‚¦‚È‚¢
 			lineType = Line.Draw;
 			setLineFlag = false;  // ‚Ü‚¾ƒ‰ƒCƒ“‚ğ•Û‘¶‚µ‚È‚¢
 		}
@@ -141,7 +141,6 @@ public class MouseLineRenderer : MonoBehaviour
 			{
 				var clickPos = Vector3.zero;
 				clickPos = nextPos;
-				clickPos.y = startPos.y;
 				// lŠp‚É‚È‚éƒ‰ƒCƒ“‚É‚·‚é
 				switch (i)
 				{

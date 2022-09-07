@@ -8,11 +8,9 @@ public class PointManager : MonoBehaviour
     [SerializeField] private GameObject point;
     private Transform tf;
     private float pressButtonCount = 0;
-    private const float longPressCount = 100f;
+    private const float longPressCount = 0.4f;
     private bool moveFlag = true;
     private bool jumpFlag = false;
-
-    private int debugCount = 0;
 
     enum Mouse
     {
@@ -20,6 +18,9 @@ public class PointManager : MonoBehaviour
         Left,
         Right,
         Middle,
+        LongLeft,
+        LongRight,
+        LongMiddle,
     }
     private Mouse buttonType;
     private Mouse oldButtonType;
@@ -30,9 +31,9 @@ public class PointManager : MonoBehaviour
         oldButtonType = Mouse.None;
     }
 
-    public RaycastHit ManagedUpdate()
+    public RaycastHit ManagedUpdate(float deltaTime)
     {
-        Control();
+        Control(deltaTime);
 
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hitInfo = new RaycastHit();
@@ -51,12 +52,12 @@ public class PointManager : MonoBehaviour
     }
 
     // プレイヤーが操作する処理
-    private void Control()
+    private void Control(float deltaTime)
     {
-        CheckMouseButton();
+        CheckMouseButton(deltaTime);
     }
 
-    private void CheckMouseButton()
+    private void CheckMouseButton(float deltaTime)
     {
         buttonType = Mouse.None;
         // 左のボタンをクリックしたら
@@ -78,15 +79,17 @@ public class PointManager : MonoBehaviour
             MiddleMouseButton();
         }
 
-        if(buttonType == Mouse.None || buttonType != oldButtonType)
+        if(buttonType == Mouse.None)
         {
             pressButtonCount = 0;
         }
         else
         {
-            pressButtonCount += Time.deltaTime;
+            pressButtonCount += deltaTime;
         }
         oldButtonType = buttonType;
+
+        Debug.Log(pressButtonCount);
     }
 
     private void LeftMouseButton()
@@ -94,13 +97,11 @@ public class PointManager : MonoBehaviour
         // 長押しなら
         if (pressButtonCount > longPressCount)
         {
+            buttonType = Mouse.LongLeft;
             // キャラクターの動きを止める
-            if (moveFlag)
-            {
-                moveFlag = false;
-            }
+            moveFlag = false;
         }
-        else if(buttonType != oldButtonType)
+        else
         {
             // キャラクターを動かすかどうかを変える
             if (moveFlag)

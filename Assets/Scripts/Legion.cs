@@ -18,8 +18,10 @@ public class Legion : MonoBehaviour
     private Vector3 velocity = Vector3.zero;
     private Vector3 jumpForce = new Vector3(0.0f, 5.0f, 0.0f);
 
+    private Rigidbody aimLegionRig;
+
     private float speed = 10f;
-    private float distance = 0.02f;
+    private float distance = 0.03f;
 
     private bool moveFlag = false;
     private bool jumpFlag = false;
@@ -95,7 +97,8 @@ public class Legion : MonoBehaviour
                 MoveFollowLegion(aPos, deltaTime);
                 break;
             case LegionType.Chase:
-                MoveGatherLine(tPos, deltaTime);
+                Physics.IgnoreLayerCollision(layer, layer, true);
+                MoveChaseLegion(tPos, deltaTime);
                 break;
             case LegionType.StandBy:
                 break;
@@ -107,7 +110,7 @@ public class Legion : MonoBehaviour
         }
     }
 
-    public void MoveFollowPlayer(float deltaTime)
+    private void MoveFollowPlayer(float deltaTime)
     {
         float dis = CompareTheDistanceYouAndOther(pTf.position);
         tf.LookAt(pTf);
@@ -128,7 +131,7 @@ public class Legion : MonoBehaviour
         }
     }
 
-    public void MoveFollowLegion(Vector3 aPos, float deltaTime)
+    private void MoveFollowLegion(Vector3 aPos, float deltaTime)
     {
         float dis = CompareTheDistanceYouAndOther(pTf.position);
         tf.localRotation = Quaternion.LookRotation(pTf.position - aPos);
@@ -149,7 +152,7 @@ public class Legion : MonoBehaviour
         }
     }
 
-    public void MoveGatherLine(Vector3 tPos, float deltaTime)
+    private void MoveGatherLine(Vector3 tPos, float deltaTime)
     {
         float dis = CompareTheDistanceYouAndOther(tPos);
         tf.LookAt(tPos);
@@ -174,6 +177,28 @@ public class Legion : MonoBehaviour
             Vector3 forward = tf.forward;
             forward.y = 0.0f;
             velocity = forward * speed * deltaTime;
+            arrivalFlag = false;
+        }
+    }
+
+    private void MoveChaseLegion(Vector3 tPos, float deltaTime)
+    {
+        float dis = CompareTheDistanceYouAndOther(tPos);
+        tf.LookAt(tPos);
+        Quaternion rota = tf.localRotation;
+        rota.x = 0.0f;
+        rota.z = 0.0f;
+        tf.localRotation = rota;
+        if (dis < distance)
+        {
+            arrivalFlag = true;
+            legionType = LegionType.Legion;
+        }
+        else
+        {
+            Vector3 forward = tf.forward;
+            forward.y = 0.0f;
+            velocity = forward * (speed * 2f) * deltaTime;
             arrivalFlag = false;
         }
     }
@@ -242,6 +267,16 @@ public class Legion : MonoBehaviour
     public void SetItemType(Item type)
     {
         itemType = type;
+    }
+
+    public Vector3 GetAimLegionPos(Vector3 pos)
+    {
+        return aimLegionRig.position;
+    }
+
+    public void SetAimLegionRig(Rigidbody rig)
+    {
+        aimLegionRig = rig;
     }
 
     public void SetMoveFlag(bool flag)
