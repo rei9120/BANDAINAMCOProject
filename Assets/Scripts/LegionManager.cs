@@ -10,36 +10,28 @@ public class LegionManager : MonoBehaviour
     private PointManager pointScript;
     private MouseLineRenderer lineScript;
 
-    private Rigidbody pRig;
-
     private List<Legion> legion;
-    private Legion leftSideStartLegion;
-    private Legion leftSidelegion;
-    private Legion rightSidelegion;
-    private Rigidbody lSRb;
-    private Rigidbody lRb;
-    private Rigidbody rRb;
+    private List<Legion> chaseLegion;
     private int GyaarKunNo;
 
     private List<Vector3> legionPos;
-    private Vector3 middleLegionPos = Vector3.zero;
-    private Vector3 leftLegionPos = Vector3.zero;
-    private float overLinePos = 0.0f;
-    private float rightLineDis = 0.0f;
-    private float lineWidthDistance = 0.5f;
-    private float lineHeightDistance = 0.5f;
-    private float lWidthDistance = 0.1f;
-    private float lHeightDistance = 0.1f;
+    private Vector3 middleLegionPos;
+    private Vector3 leftLegionPos;
+    private float overLinePos;
+    private float rightLineDis;
+    private float lineWidthDistance;
+    private float lineHeightDistance;
+    private float lWidthDistance;
+    private float lHeightDistance;
 
-    private int legionNum = 0;
-    private int rightNo = -1;
-    private int leftNo = 0;
-    private int chaseleftNo = 0;
+    private int rightNo;
+    private int leftNo;
+    private int chaseleftNo;
 
-    private bool moveFlag = false;
-    private bool setLineFlag = false;
-    private bool allLegionFlag = false;
-    private bool startLegionFlag = false;
+    private bool moveFlag;
+    private bool setLineFlag;
+    private bool allLegionFlag;
+    private bool startLegionFlag;
 
     /// <summary>
     /// 初期化(GameSceneManagerで呼んでいる)
@@ -51,21 +43,33 @@ public class LegionManager : MonoBehaviour
         // Pointオブジェクト
         point = p;
         pointScript = point.GetComponent<PointManager>();
-        pRig = point.GetComponent<Rigidbody>();
         // LineRendererオブジェクト
         lineRenderer = l;
         lineScript = lineRenderer.GetComponent<MouseLineRenderer>();
         // Legionオブジェクト
         legion = new List<Legion>();
+        chaseLegion = new List<Legion>();
         legionPos = new List<Vector3>();
         GyaarKunNo = 0;
         CreateLegion(5);
-        leftSideStartLegion = legion[0];
-        leftSidelegion = legion[0];
-        rightSidelegion = legion[0];
-        lSRb = leftSideStartLegion.GetComponent<Rigidbody>();
-        lRb = leftSidelegion.GetComponent<Rigidbody>();
-        rRb = rightSidelegion.GetComponent<Rigidbody>();
+
+        middleLegionPos = Vector3.zero;
+        leftLegionPos = Vector3.zero;
+        overLinePos = 1.0f;
+        rightLineDis = 0.0f;
+        lineWidthDistance = 0.5f;
+        lineHeightDistance = 0.5f;
+        lWidthDistance = 2.0f;
+        lHeightDistance = 2.0f;
+
+        rightNo = -1;
+        leftNo = 0;
+        chaseleftNo = 0;
+
+        moveFlag = false;
+        setLineFlag = false;
+        allLegionFlag = false;
+        startLegionFlag = false;
     }
 
     /// <summary>
@@ -98,7 +102,6 @@ public class LegionManager : MonoBehaviour
             if (allLegionFlag)
             {
                 ReleaseLegion();
-                legionNum = 0;
                 rightNo = -1;
                 middleLegionPos = Vector3.zero;
                 leftLegionPos = Vector3.zero;
@@ -122,7 +125,6 @@ public class LegionManager : MonoBehaviour
             {
                 CheckLegionType(legion[i], i);
                 Vector3 pos = Vector3.zero;
-                legionNum = legion.Count;
                
                 if (legionPos.Count != 0)
                 {
@@ -137,14 +139,7 @@ public class LegionManager : MonoBehaviour
             overLinePos = legion[0].GetLegionPosition().x + rightLineDis;
         }
 
-        if (setLineFlag && legion[legion.Count - 1].GetLegionType() == Legion.LegionType.Chase)
-        {
-            chaseleftNo = leftNo;
-        }
-        else if(setLineFlag && legion[legion.Count - 1].GetLegionType() != Legion.LegionType.Chase)
-        {
-            leftNo = chaseleftNo;
-        }
+        CheckEndChase();
 
         if(Input.GetKeyDown(KeyCode.Backspace))
         {
@@ -333,6 +328,7 @@ public class LegionManager : MonoBehaviour
             {
                 legion[beforeCount + i].SetLegionType(Legion.LegionType.Chase);
                 legionPos.Add(legion[beforeCount + i].GetLegionPosition());
+                chaseLegion.Add(legion[beforeCount + i]);
             }
         }
     }
@@ -372,6 +368,20 @@ public class LegionManager : MonoBehaviour
                     chaseleftNo = leftNo;
                     return false;
                 }
+            }
+        }
+        leftNo = chaseleftNo;
+        return true;
+    }
+
+    private bool CheckEndChase()
+    {
+        for(int i = 0; i < chaseLegion.Count; i++)
+        {
+            if(chaseLegion[i].GetLegionType() == Legion.LegionType.Chase)
+            {
+                chaseleftNo = leftNo;
+                return false;
             }
         }
         leftNo = chaseleftNo;
