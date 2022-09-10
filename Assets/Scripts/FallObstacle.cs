@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class FallObstacle : MonoBehaviour
 {
+    private ObstacleManager obstacleScript;
     private Rigidbody rig;
     private Vector3 initPos;
     public void Init()

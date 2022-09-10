@@ -6,3 +6,8 @@ Assembly-CSharp-Editor.csproj
 BANDAINAMCOProject.sln
 Library
 Temp
+BANDAINAMCOProject_BurstDebugInformation_DoNotShip
+BANDAINAMCOProject_Data
+MonoBleedingEdge
+BANDAINAMCOProject.exe
+UnityCrashHandler64.exe
