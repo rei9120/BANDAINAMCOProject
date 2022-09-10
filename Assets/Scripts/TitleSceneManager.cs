@@ -49,12 +49,12 @@ public class TitleSceneManager : MonoBehaviour
 
             textScript.ManagedUpdate();
 
-            if (textScript.GetManualFlag())
-            {
-                manualCanvas.SetActive(true);
-            }
+            //if (textScript.GetManualFlag())
+            //{
+            //    manualCanvas.SetActive(true);
+            //}
 
-            if (textScript.GetExitFlag())
+            if (textScript.GetExitFlag() || Input.GetKeyDown(KeyCode.Escape))
             {
 #if UNITY_EDITOR
                 UnityEditor.EditorApplication.isPlaying = false;//ゲームプレイ終了

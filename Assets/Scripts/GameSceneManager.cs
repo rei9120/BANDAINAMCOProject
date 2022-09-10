@@ -15,6 +15,8 @@ public class GameSceneManager : MonoBehaviour
     [SerializeField] private GameObject lineRenderer;
     [SerializeField] private GameObject anchor;
     [SerializeField] private GameObject obstacleManager;
+    [SerializeField] private GameObject gameUI;
+    [SerializeField] private GameObject goal;
     private FPSManager fpsScript;
     private FadeManager fadeScript;
     private PointManager pointScript;
@@ -22,6 +24,8 @@ public class GameSceneManager : MonoBehaviour
     private CameraManager cameraScript;
     private MouseLineRenderer mouseLineScript;
     private ObstacleManager obstacleScript;
+    private GameUIManager gameUIScript;
+    private GoalManager goalScript;
 
     private Image fadeImage;
     private Color fadeColor;
@@ -48,12 +52,15 @@ public class GameSceneManager : MonoBehaviour
         cameraScript = gameCamera.GetComponent<CameraManager>();
         mouseLineScript = lineRenderer.GetComponent<MouseLineRenderer>();
         obstacleScript = obstacleManager.GetComponent<ObstacleManager>();
+        gameUIScript = gameUI.GetComponent<GameUIManager>();
+        goalScript = goal.GetComponent<GoalManager>();
         fpsScript.Init();
         pointScript.Init();
+        obstacleScript.Init();
         legionScript.Init(point, lineRenderer);
         cameraScript.Init(legionScript.GetStartLegionPtr());
         mouseLineScript.Init(point, legionManager);
-        obstacleScript.Init();
+        gameUIScript.Init(legionScript);
 
         fadeImage = fade.GetComponent<Image>();
         fadeColor = fadeImage.color;
@@ -79,11 +86,13 @@ public class GameSceneManager : MonoBehaviour
     {
         hitInfo = pointScript.ManagedUpdate(deltaTime);
         mouseLineScript.ManagedUpdate(hitInfo);
-        obstacleScript.ManagedUpdate();
+        obstacleScript.ManagedUpdate(deltaTime);
         legionScript.ManagedUpdate(deltaTime);
         cameraScript.ManagedUpdate(legionScript.GetStartLegionPtr());
+        gameUIScript.ManagedUpdate();
 
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Escape)
+            || goalScript.GetGoalFlag())
         {
             SceneUpdate();
         }

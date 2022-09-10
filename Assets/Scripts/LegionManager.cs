@@ -33,6 +33,8 @@ public class LegionManager : MonoBehaviour
     private bool allLegionFlag;
     private bool startLegionFlag;
 
+    [SerializeField] private int deleteNum;
+
     /// <summary>
     /// 初期化(GameSceneManagerで呼んでいる)
     /// </summary>
@@ -65,7 +67,7 @@ public class LegionManager : MonoBehaviour
         rightNo = -1;
         leftNo = 0;
         chaseleftNo = 0;
-
+        
         moveFlag = false;
         setLineFlag = false;
         allLegionFlag = false;
@@ -79,28 +81,37 @@ public class LegionManager : MonoBehaviour
     {
         UpdateValue();
 
-        if (setLineFlag)
+        for (int i = 0; i < legion.Count; i++)
+        {
+            if (legion[i] == null)
+            {
+                LegionDestroy(legion[i], i);
+            }
+        }
+
+        if (setLineFlag && legion.Count != 0)
         {
             allLegionFlag = CheckAllLegionFlag();
-            if (rightNo != -1)
+            if (rightNo > 0)  // キャラが右のラインに達し列を変えたとき
             {
-                Vector3 lPos = legion[0].GetLegionPosition();
-                Vector3 rPos = legion[rightNo].GetLegionPosition();
+                Vector3 lPos = legion[0].GetLegionPosition();  // 最前線のもっとも左のキャラ
+                Vector3 rPos = legion[rightNo].GetLegionPosition();  // 最前線のもっとも右のキャラ
                 // 一番左上と右上からその真ん中を得る
                 middleLegionPos = new Vector3(Mathf.Lerp(lPos.x, rPos.x, 0.5f), lPos.y, Mathf.Lerp(lPos.z, rPos.z, 0.5f));
             }
-            else
+            else  // ラインの右端にキャラが達していないとき
             {
-                Vector3 lPos = legion[0].GetLegionPosition();
-                Vector3 rPos = legion[legion.Count - 1].GetLegionPosition();
+                Vector3 lPos = legion[0].GetLegionPosition();  // 最前線のもっとも左のキャラ
+                Vector3 rPos = legion[legion.Count - 1].GetLegionPosition();  // 最前線のもっとも右のキャラ
                 // 一番左上と右上からその真ん中を得る
                 middleLegionPos = new Vector3(Mathf.Lerp(lPos.x, rPos.x, 0.5f), lPos.y, Mathf.Lerp(lPos.z, rPos.z, 0.5f));
             }
         }
         else
         {
-            if (allLegionFlag)
+            if (legion.Count != 0)
             {
+                if(allLegionFlag || legion[0].GetLegionType() != Legion.LegionType.Individual)
                 ReleaseLegion();
                 rightNo = -1;
                 middleLegionPos = Vector3.zero;
@@ -141,9 +152,25 @@ public class LegionManager : MonoBehaviour
 
         CheckEndChase();
 
+        if(Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            deleteNum++;
+            if(deleteNum > legion.Count - 1)
+            {
+                deleteNum = 0;
+            }
+        }
+        else if(Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            deleteNum--;
+            if(deleteNum < 0)
+            {
+                deleteNum = legion.Count - 1;
+            }
+        }
         if(Input.GetKeyDown(KeyCode.Backspace))
         {
-            LegionDestroy(legion[0], 0);
+            LegionDestroy(legion[deleteNum], deleteNum);
         }
     }
 
@@ -335,10 +362,27 @@ public class LegionManager : MonoBehaviour
 
     public void LegionDestroy(Legion le, int leNo)
     {
-        Destroy(le.gameObject);
-        Destroy(le);
+        if (le != null)
+        {
+            Destroy(le.gameObject);
+            Destroy(le);
+        }
         legion.Remove(le);
-        legionPos.RemoveAt(leNo);
+        if (legionPos.Count != 0)
+        {
+            legionPos.RemoveAt(leNo);
+        }
+
+        // 指標にする右側のキャラが消えていたら1つ左のキャラを見る
+        if (rightNo == leNo)
+        {
+            rightNo -= 1;
+        }
+        else
+        {
+            rightNo--;
+        }
+        chaseleftNo--;
     }
 
     private void ReleaseLegion()
@@ -413,6 +457,16 @@ public class LegionManager : MonoBehaviour
         return startLegionFlag;
     }
 
+    public Legion.LegionType GetLegionType()
+    {
+        return legion[0].GetLegionType();
+    }
+
+    public bool GetLegionMoveFlag()
+    {
+        return legion[0].GetMoveFlag();
+    }
+
     public Legion GetStartLegionPtr()
     {
         if (legion.Count > 0)
@@ -430,6 +484,11 @@ public class LegionManager : MonoBehaviour
         {
             return null;
         }
+    }
+
+    public int GetNowLegionNum()
+    {
+        return legion.Count;
     }
 
     private float MaxValue(float value1, float value2)

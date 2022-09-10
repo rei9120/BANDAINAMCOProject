@@ -60,7 +60,7 @@ public class Legion : MonoBehaviour
         pointScript = p.GetComponent<PointManager>();
         tf = this.transform;
         rig = this.GetComponent<Rigidbody>();
-        rig.position = pos + new Vector3(0.0f, rig.position.y, -2.0f);
+        rig.position = pos + new Vector3(0.0f, 1f, -2.0f);
         legionScript = le.GetComponent<LegionManager>();
         anim = this.GetComponent<Animator>();
         legionType = LegionType.Individual;
@@ -269,14 +269,9 @@ public class Legion : MonoBehaviour
         itemType = type;
     }
 
-    public Vector3 GetAimLegionPos(Vector3 pos)
+    public bool GetMoveFlag()
     {
-        return aimLegionRig.position;
-    }
-
-    public void SetAimLegionRig(Rigidbody rig)
-    {
-        aimLegionRig = rig;
+        return moveFlag;
     }
 
     public void SetMoveFlag(bool flag)
@@ -310,6 +305,10 @@ public class Legion : MonoBehaviour
 
     public Vector3 GetLegionPosition()
     {
-        return rig.position;
+        if (this != null)
+        {
+            return rig.position;
+        }
+        return Vector3.zero;
     }
 }
