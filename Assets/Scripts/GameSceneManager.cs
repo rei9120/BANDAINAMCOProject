@@ -17,6 +17,7 @@ public class GameSceneManager : MonoBehaviour
     [SerializeField] private GameObject obstacleManager;
     [SerializeField] private GameObject gameUI;
     [SerializeField] private GameObject goal;
+    [SerializeField] private GameObject sky;
     private FPSManager fpsScript;
     private FadeManager fadeScript;
     private PointManager pointScript;
@@ -26,6 +27,7 @@ public class GameSceneManager : MonoBehaviour
     private ObstacleManager obstacleScript;
     private GameUIManager gameUIScript;
     private GoalManager goalScript;
+    private SkyManager skyScript;
 
     private Image fadeImage;
     private Color fadeColor;
@@ -54,6 +56,7 @@ public class GameSceneManager : MonoBehaviour
         obstacleScript = obstacleManager.GetComponent<ObstacleManager>();
         gameUIScript = gameUI.GetComponent<GameUIManager>();
         goalScript = goal.GetComponent<GoalManager>();
+        skyScript = sky.GetComponent<SkyManager>();
         fpsScript.Init();
         pointScript.Init();
         obstacleScript.Init();
@@ -61,6 +64,7 @@ public class GameSceneManager : MonoBehaviour
         cameraScript.Init(legionScript.GetStartLegionPtr());
         mouseLineScript.Init(point, legionManager);
         gameUIScript.Init(legionScript);
+        skyScript.Init(gameCamera);
 
         fadeImage = fade.GetComponent<Image>();
         fadeColor = fadeImage.color;
@@ -90,6 +94,7 @@ public class GameSceneManager : MonoBehaviour
         legionScript.ManagedUpdate(deltaTime);
         cameraScript.ManagedUpdate(legionScript.GetStartLegionPtr());
         gameUIScript.ManagedUpdate();
+        skyScript.ManagedUpdate();
 
         if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Escape)
             || goalScript.GetGoalFlag())
