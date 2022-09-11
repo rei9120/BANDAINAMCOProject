@@ -13,6 +13,9 @@ public class TextManager : MonoBehaviour
     private TextMeshPro gameStartText;
     private TextMeshPro manualText;
     private TextMeshPro exitText;
+    private Transform gTf;
+    private Transform mTf;
+    private Transform eTf;
     private string titleTextDetail;
     private List<string> titleColor;
 
@@ -41,10 +44,14 @@ public class TextManager : MonoBehaviour
         gameStartText = gameStart.GetComponent<TextMeshPro>();
         manualText = manual.GetComponent<TextMeshPro>();
         exitText = exit.GetComponent<TextMeshPro>();
-        
-        gameStartSize = gameStart.transform.localScale;
-        manualSize = manual.transform.localScale;
-        exitSize = exit.transform.localScale;
+
+        gTf = gameStart.transform;
+        mTf = manual.transform;
+        eTf = exit.transform;
+
+        gameStartSize = gTf.localScale;
+        manualSize = mTf.localScale;
+        exitSize = eTf.localScale;
     }
 
     public void ManagedUpdate()
@@ -56,22 +63,22 @@ public class TextManager : MonoBehaviour
             Transform rTf = hitInfo.transform;
             if (rTf.tag == "GameStart")
             {
-                rTf.localScale = ChangeTextBigSize(rTf.localScale, gameStartSize);
-                gameStartText.text = titleColor[0] + "Game Start</color>";
-                if(Input.GetMouseButtonDown(0))
+                gTf.localScale = ChangeTextBigSize(gTf.localScale, gameStartSize);
+                gameStartText.text = titleColor[0] + "ゲームスタート</color>";
+                if (Input.GetMouseButtonDown(0))
                 {
                     gameStartFlag = true;
                 }
             }
             else
             {
-                rTf.localScale = gameStartSize;
-                gameStartText.text = "<color=#FFFFFF>Game Start</color>";
+                gTf.localScale = gameStartSize;
+                gameStartText.text = "<color=#FFFFFF>ゲームスタート</color>";
             }
             if (rTf.tag == "Manual")
             {
-                rTf.localScale = ChangeTextBigSize(rTf.localScale, manualSize);
-                manualText.text = titleColor[2] + "Manual</color>";
+                mTf.localScale = ChangeTextBigSize(mTf.localScale, manualSize);
+                manualText.text = titleColor[2] + "操作説明</color>";
                 if (Input.GetMouseButtonDown(0))
                 {
                     manualFlag = true;
@@ -79,13 +86,13 @@ public class TextManager : MonoBehaviour
             }
             else
             {
-                rTf.localScale = manualSize;
-                manualText.text = "<color=#FFFFFF>Manual</color>";
+                mTf.localScale = manualSize;
+                manualText.text = "<color=#FFFFFF>操作説明</color>";
             }
-            if(rTf.tag == "Exit")
+            if (rTf.tag == "Exit")
             {
-                rTf.localScale = ChangeTextBigSize(rTf.localScale, exitSize);
-                exitText.text = titleColor[1] + "Exit</color>";
+                eTf.localScale = ChangeTextBigSize(eTf.localScale, exitSize);
+                exitText.text = titleColor[1] + "ゲーム終了</color>";
                 if (Input.GetMouseButtonDown(0))
                 {
                     exitFlag = true;
@@ -93,8 +100,8 @@ public class TextManager : MonoBehaviour
             }
             else
             {
-                rTf.localScale = exitSize;
-                exitText.text = "<color=#FFFFFF>Exit</color>";
+                eTf.localScale = exitSize;
+                exitText.text = "<color=#FFFFFF>ゲーム終了</color>";
             }
         }
     }
@@ -121,8 +128,8 @@ public class TextManager : MonoBehaviour
 
     private Vector3 ChangeTextBigSize(Vector3 size, Vector3 defaultSize)
     {
-        Vector3 changeSize = new Vector3(0.5f, 0.5f, 0.5f);
-        if(size.x < defaultSize.x + changeSize.x)
+        Vector3 changeSize = new Vector3(0.3f, 0.3f, 0.3f);
+        if (size.x < defaultSize.x + changeSize.x)
         {
             size.x += 0.1f;
             size.y += 0.1f;
