@@ -19,6 +19,7 @@ public class MouseLineRenderer : MonoBehaviour
 	private int linePosSize = 5;
 	private bool drawStartFlag = false;
 	private bool setLineFlag = false;
+	private bool moveLegionFlag = false;
 
 	enum Line
     {
@@ -123,8 +124,18 @@ public class MouseLineRenderer : MonoBehaviour
 	// ラインを引く処理
 	private void DrawLine()
     {
+		if(setLineFlag && Input.GetMouseButton(0))
+        {
+			moveLegionFlag = true;
+			for (int i = 0; i < linePosSize; i++)
+			{
+				// 追加した頂点の座標を消す
+				this.lineRenderer.SetPosition(i, Vector3.zero);
+			}
+		}
+
         // 作ったラインを引き続ける
-        if (lineType == Line.None && setLineFlag)
+        if (lineType == Line.None && setLineFlag && !moveLegionFlag)
         {
             float tmp = arrayPos[0].y;
             for (int i = 0; i < linePosSize; i++)
@@ -173,6 +184,7 @@ public class MouseLineRenderer : MonoBehaviour
 	private void ClearLine()
     {
 		setLineFlag = false;
+		moveLegionFlag = false;
 		lineType = Line.None;
 		drawStartFlag = false;  // 引き始めに変更
 		lineRenderer.positionCount = linePosSize;

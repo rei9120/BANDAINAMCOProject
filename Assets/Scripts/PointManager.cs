@@ -12,6 +12,11 @@ public class PointManager : MonoBehaviour
     private bool moveFlag = true;
     private bool jumpFlag = false;
 
+    private int pressBeforeButton;
+    private bool pressButtonFlag = false;
+
+    [SerializeField] private LayerMask layerMask;
+
     enum Mouse
     {
         None = -1,
@@ -29,6 +34,10 @@ public class PointManager : MonoBehaviour
     {
         tf = this.transform;
         oldButtonType = Mouse.None;
+        Vector3 pos = tf.position;
+        pos.y = 0.5f;
+        tf.position = pos;
+        pressButtonFlag = false;
     }
 
     public RaycastHit ManagedUpdate(float deltaTime)
@@ -37,13 +46,13 @@ public class PointManager : MonoBehaviour
 
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hitInfo = new RaycastHit();
-        if (Physics.Raycast(ray, out hitInfo, Mathf.Infinity))
+        if (Physics.Raycast(ray, out hitInfo, Mathf.Infinity, layerMask))
         {
-            if (hitInfo.transform.tag == "Ground")
+            if (hitInfo.transform.tag == "Ground" || hitInfo.transform.tag == "Space")
             {
                 tf.position = hitInfo.point;
                 Vector3 pos = tf.position;
-                pos.y = 1.5f + hitInfo.point.y;
+                pos.y = 0.5f + hitInfo.point.y;
                 tf.position = pos;
             }
         }
@@ -60,22 +69,32 @@ public class PointManager : MonoBehaviour
     private void CheckMouseButton(float deltaTime)
     {
         buttonType = Mouse.None;
+
+        if(Input.GetMouseButtonUp(pressBeforeButton))
+        {
+            pressButtonFlag = false;
+        }
+
+        Debug.Log("before = " + moveFlag);
         // 左のボタンをクリックしたら
         if (Input.GetMouseButton(0))
         {
             buttonType = Mouse.Left;
+            pressBeforeButton = 0;
             LeftMouseButton();
         }
         // 右のボタンをクリックしたら
         else if(Input.GetMouseButton(1))
         {
             buttonType = Mouse.Right;
+            pressBeforeButton = 1;
             RightMouseButton();
         }
         // 真ん中のボタンをクリックしたら
         else if(Input.GetMouseButton(2))
         {
             buttonType = Mouse.Middle;
+            pressBeforeButton = 2;
             MiddleMouseButton();
         }
 
@@ -90,6 +109,7 @@ public class PointManager : MonoBehaviour
         oldButtonType = buttonType;
 
         Debug.Log(pressButtonCount);
+        Debug.Log("another = " + moveFlag);
     }
 
     private void LeftMouseButton()
@@ -101,7 +121,7 @@ public class PointManager : MonoBehaviour
             // キャラクターの動きを止める
             moveFlag = false;
         }
-        else
+        else if(!pressButtonFlag)
         {
             // キャラクターを動かすかどうかを変える
             if (moveFlag)
@@ -114,6 +134,7 @@ public class PointManager : MonoBehaviour
                 moveFlag = true;
                 Debug.Log(true);
             }
+            pressButtonFlag = true;
         }
     }
 
@@ -123,16 +144,14 @@ public class PointManager : MonoBehaviour
         if (pressButtonCount > longPressCount)
         {
         }
-        else if (buttonType != oldButtonType)
+        else if(!pressButtonFlag)
         {
-            if (Input.GetMouseButtonDown(0))
+            // キャラクターをジャンプさせる
+            if (buttonType == Mouse.Right && !jumpFlag)
             {
-                // キャラクターをジャンプさせる
-                if (buttonType == Mouse.Right && !jumpFlag)
-                {
-                    jumpFlag = true;
-                }
+                jumpFlag = true;
             }
+            pressButtonFlag = true;
         }
     }
 
@@ -142,8 +161,9 @@ public class PointManager : MonoBehaviour
         if (pressButtonCount > longPressCount)
         {
         }
-        else if (buttonType != oldButtonType)
+        else if(!pressButtonFlag)
         {
+            pressButtonFlag = true;
         }
     }
 

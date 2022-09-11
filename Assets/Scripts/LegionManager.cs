@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class LegionManager : MonoBehaviour
 {
@@ -53,7 +54,7 @@ public class LegionManager : MonoBehaviour
         chaseLegion = new List<Legion>();
         legionPos = new List<Vector3>();
         GyaarKunNo = 0;
-        CreateLegion(5);
+        CreateLegion(1);
 
         middleLegionPos = Vector3.zero;
         leftLegionPos = Vector3.zero;
@@ -129,14 +130,20 @@ public class LegionManager : MonoBehaviour
             if (num > 0)
             {
                 CreateLegion(num);
-                legion[i].SetItemType(Legion.Item.none);  // アイテムを拾っていない状態に戻す
+                legion[i].SetItemType(Legion.Item.None);  // アイテムを拾っていない状態に戻す
             }
 
             if (legion[i] != null)
             {
+                Vector3 pos = legion[i].GetLegionPosition();
+                if (pos.y < -3.0f)
+                {
+                    LegionDestroy(legion[i], i);
+                    continue;
+                }
+                pos = Vector3.zero;
                 CheckLegionType(legion[i], i);
-                Vector3 pos = Vector3.zero;
-               
+
                 if (legionPos.Count != 0)
                 {
                     pos = legionPos[i];
@@ -168,7 +175,8 @@ public class LegionManager : MonoBehaviour
                 deleteNum = legion.Count - 1;
             }
         }
-        if(Input.GetKeyDown(KeyCode.Backspace))
+
+        if (Input.GetKeyDown(KeyCode.Backspace) && SceneManager.GetActiveScene().name == "Debug")
         {
             LegionDestroy(legion[deleteNum], deleteNum);
         }
@@ -459,11 +467,19 @@ public class LegionManager : MonoBehaviour
 
     public Legion.LegionType GetLegionType()
     {
+        if(legion.Count == 0)
+        {
+            return Legion.LegionType.StandBy;
+        }
         return legion[0].GetLegionType();
     }
 
     public bool GetLegionMoveFlag()
     {
+        if(legion.Count == 0)
+        {
+            return false;
+        }
         return legion[0].GetMoveFlag();
     }
 
