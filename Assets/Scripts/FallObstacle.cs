@@ -7,6 +7,13 @@ public class FallObstacle : MonoBehaviour
     private ObstacleManager obstacleScript;
     private Rigidbody rig;
     private Vector3 initPos;
+
+    public void Start()
+    {
+        rig = this.GetComponent<Rigidbody>();
+        initPos = rig.position;
+    }
+
     public void Init()
     {
         rig = this.GetComponent<Rigidbody>();

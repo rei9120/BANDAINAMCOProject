@@ -13,18 +13,16 @@ public class Legion : MonoBehaviour
     private Transform pTf;
 
     private Rigidbody rig;
-    private Rigidbody pRb;
 
     private Vector3 velocity = Vector3.zero;
-    private Vector3 jumpForce = new Vector3(0.0f, 5.0f, 0.0f);
+    private Vector3 jumpForce;
 
-    private Rigidbody aimLegionRig;
-
-    private float speed = 10f;
-    private float distance = 0.03f;
+    private float speed;
+    private float distance;
 
     private bool moveFlag = false;
     private bool jumpFlag = false;
+    private bool OnJumpFlag = false;
     private bool legionFlag = false;
     private bool arrivalFlag = false;
 
@@ -42,9 +40,10 @@ public class Legion : MonoBehaviour
 
     public enum Item
     {
-        none,
-        r,
-        normal,
+        None,
+        Normal,
+        Rare = 3,
+        Special = 5,
     };
     private Item itemType;
 
@@ -56,7 +55,6 @@ public class Legion : MonoBehaviour
     public void Init(GameObject p, GameObject le,　Vector3 pos)
     {
         pTf = p.transform;
-        pRb = p.GetComponent<Rigidbody>();
         pointScript = p.GetComponent<PointManager>();
         tf = this.transform;
         rig = this.GetComponent<Rigidbody>();
@@ -64,6 +62,15 @@ public class Legion : MonoBehaviour
         legionScript = le.GetComponent<LegionManager>();
         anim = this.GetComponent<Animator>();
         legionType = LegionType.Individual;
+#if UNITY_EDITOR
+        jumpForce = new Vector3(0.0f, 3000.0f, 0.0f);
+        speed = 10f;
+        distance = 0.03f;
+#else
+        jumpForce = new Vector3(0.0f, 600.0f, 0.0f);
+        speed = 10f;
+        distance = 0.1f;
+#endif
     }
 
     public void ManagedUpdate(Vector3 targetPos, Vector3 anchorPos, float deltaTime)
@@ -71,9 +78,10 @@ public class Legion : MonoBehaviour
         // 必要な値を更新または初期化する
         UpdateValue();
 
-        if (jumpFlag)
+        if (jumpFlag && !OnJumpFlag)
         {
-            rig.AddForce(jumpForce, ForceMode.Impulse);
+            rig.AddForce(jumpForce * deltaTime, ForceMode.Impulse);
+            OnJumpFlag = true;
         }
 
         Move(targetPos, anchorPos, deltaTime);
@@ -220,14 +228,25 @@ public class Legion : MonoBehaviour
         Transform cTf = col.transform;
         if (cTf.tag == "NormalItem")
         {
-            itemType = Item.normal;
+            itemType = Item.Normal;
+            col.gameObject.SetActive(false);
+        }
+        if (cTf.tag == "RareItem")
+        {
+            itemType = Item.Rare;
+            col.gameObject.SetActive(false);
+        }
+        if (cTf.tag == "SpecialItem")
+        {
+            itemType = Item.Special;
             col.gameObject.SetActive(false);
         }
 
-        if(cTf.tag == "Ground")
+        if (cTf.tag == "Ground")
         {
             if (pointScript != null)
             {
+                OnJumpFlag = false;
                 pointScript.SetJumpFlag(false);
             }
         }

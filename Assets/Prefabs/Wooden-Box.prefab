@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 6163274048740040467}
   m_Layer: 0
   m_Name: Wooden-Box
-  m_TagString: Untagged
+  m_TagString: Obstacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -114,7 +114,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 0
+  m_Constraints: 112
   m_CollisionDetection: 0
 --- !u!114 &6163274048740040467
 MonoBehaviour:

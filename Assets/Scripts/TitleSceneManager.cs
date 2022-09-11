@@ -8,9 +8,9 @@ using UnityEngine.UI;
 public class TitleSceneManager : MonoBehaviour
 {
     [SerializeField] private GameObject fade;
+    [SerializeField] private GameObject option;
     [SerializeField] private TextManager textScript;
-    [SerializeField] private GameObject manualCanvas;
-    private ManualManager manualScript;
+    private OptionManager optionScript;
     private FadeManager fadeScript;
     private Image fadeImage;
     private Color fadeColor;
@@ -24,18 +24,14 @@ public class TitleSceneManager : MonoBehaviour
         fadeImage = fade.GetComponent<Image>();
         fadeColor = fadeImage.color;
         fadeScript = fade.GetComponent<FadeManager>();
-        manualScript = manualCanvas.GetComponent<ManualManager>();
-        if (manualCanvas.activeSelf)
-        {
-            manualCanvas.SetActive(false);
-        }
+        optionScript = option.GetComponent<OptionManager>();
         textScript.Init();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (!sceneFlag && !manualCanvas.activeSelf)
+        if (!sceneFlag && option.activeSelf)
         {
             if (fadeFlag)
             {
@@ -65,7 +61,7 @@ public class TitleSceneManager : MonoBehaviour
         }
         else
         {
-            manualScript.ManagedUpdate();
+            optionScript.ManagedUpdate();
         }
 
         if (textScript.GetGameStartFlag() || sceneFlag)

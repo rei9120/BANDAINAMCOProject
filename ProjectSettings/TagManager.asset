@@ -7,12 +7,15 @@ TagManager:
   - NormalItem
   - Ground
   - Fall
-  - Obstancle
   - Legion
   - GameStart
   - Manual
   - Exit
   - End
+  - RareItem
+  - SpecialItem
+  - Obstacle
+  - Space
   layers:
   - Default
   - TransparentFX
@@ -21,8 +24,8 @@ TagManager:
   - Water
   - UI
   - Legion
-  - 
-  - 
+  - Space
+  - Ground
   - 
   - 
   - 
