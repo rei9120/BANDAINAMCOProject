@@ -8,6 +8,7 @@ public class TextManager : MonoBehaviour
     [SerializeField] private GameObject title;
     [SerializeField] private GameObject gameStart;
     [SerializeField] private GameObject manual;
+    private GameObject manualCanvas;
     [SerializeField] private GameObject exit;
     private TextMeshPro titleText;
     private TextMeshPro gameStartText;
@@ -52,56 +53,71 @@ public class TextManager : MonoBehaviour
         gameStartSize = gTf.localScale;
         manualSize = mTf.localScale;
         exitSize = eTf.localScale;
+        manualCanvas = GameObject.Find("MethodOfOperationCanvas");
+        manualCanvas.SetActive(false);
     }
 
     public void ManagedUpdate()
     {
+        if (manualFlag)
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                manualFlag = false;
+                manualCanvas.SetActive(false);
+            }
+        }
+
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hitInfo = new RaycastHit();
         if (Physics.Raycast(ray, out hitInfo, Mathf.Infinity))
         {
-            Transform rTf = hitInfo.transform;
-            if (rTf.tag == "GameStart")
+            if (!gameStartFlag && !manualFlag)
             {
-                gTf.localScale = ChangeTextBigSize(gTf.localScale, gameStartSize);
-                gameStartText.text = titleColor[0] + "ゲームスタート</color>";
-                if (Input.GetMouseButtonDown(0))
+                Transform rTf = hitInfo.transform;
+                if (rTf.tag == "GameStart")
                 {
-                    gameStartFlag = true;
+                    gTf.localScale = ChangeTextBigSize(gTf.localScale, gameStartSize);
+                    gameStartText.text = titleColor[0] + "ゲームスタート</color>";
+                    if (Input.GetMouseButtonDown(0))
+                    {
+                        gameStartFlag = true;
+                    }
                 }
-            }
-            else
-            {
-                gTf.localScale = gameStartSize;
-                gameStartText.text = "<color=#FFFFFF>ゲームスタート</color>";
-            }
-            if (rTf.tag == "Manual")
-            {
-                mTf.localScale = ChangeTextBigSize(mTf.localScale, manualSize);
-                manualText.text = titleColor[2] + "操作説明</color>";
-                if (Input.GetMouseButtonDown(0))
+                else
                 {
-                    manualFlag = true;
+                    gTf.localScale = gameStartSize;
+                    gameStartText.text = "<color=#FFFFFF>ゲームスタート</color>";
                 }
-            }
-            else
-            {
-                mTf.localScale = manualSize;
-                manualText.text = "<color=#FFFFFF>操作説明</color>";
-            }
-            if (rTf.tag == "Exit")
-            {
-                eTf.localScale = ChangeTextBigSize(eTf.localScale, exitSize);
-                exitText.text = titleColor[1] + "ゲーム終了</color>";
-                if (Input.GetMouseButtonDown(0))
+                if (rTf.tag == "Manual")
                 {
-                    exitFlag = true;
+                    mTf.localScale = ChangeTextBigSize(mTf.localScale, manualSize);
+                    manualText.text = titleColor[2] + "操作説明</color>";
+                    if (Input.GetMouseButtonDown(0))
+                    {
+                        manualFlag = true;
+                        manualCanvas.SetActive(manualFlag);
+                    }
                 }
-            }
-            else
-            {
-                eTf.localScale = exitSize;
-                exitText.text = "<color=#FFFFFF>ゲーム終了</color>";
+                else
+                {
+                    mTf.localScale = manualSize;
+                    manualText.text = "<color=#FFFFFF>操作説明</color>";
+                }
+                if (rTf.tag == "Exit")
+                {
+                    eTf.localScale = ChangeTextBigSize(eTf.localScale, exitSize);
+                    exitText.text = titleColor[1] + "ゲーム終了</color>";
+                    if (Input.GetMouseButtonDown(0))
+                    {
+                        exitFlag = true;
+                    }
+                }
+                else
+                {
+                    eTf.localScale = exitSize;
+                    exitText.text = "<color=#FFFFFF>ゲーム終了</color>";
+                }
             }
         }
     }
