@@ -5,16 +5,12 @@ using UnityEngine;
 public class ObstacleManager : MonoBehaviour
 {
     [SerializeField] private List<FallObstacle> fallObjects;
-    [SerializeField] private List<RollIronBall> rollIronBalls;
+    [SerializeField] private List<BallObstacle> ballObjects;
     public void Init()
     {
         for(int i = 0; i < fallObjects.Count; i++)
         {
             fallObjects[i].Init();
-        }
-        for(int i = 0; i < rollIronBalls.Count; i++)
-        {
-            rollIronBalls[i].Init();
         }
     }
 
@@ -24,16 +20,21 @@ public class ObstacleManager : MonoBehaviour
         {
             fallObjects[i].ManagedUpdate();
         }
-        for(int i = 0; i < rollIronBalls.Count; i++)
+        for (int i = 0; i < ballObjects.Count; i++)
         {
-            if (rollIronBalls[i] != null)
+            if (ballObjects[i] != null)
             {
-                rollIronBalls[i].ManagedUpdate(deltaTime);
+                ballObjects[i].ManagedUpdate(deltaTime);
             }
             else
             {
-                rollIronBalls.RemoveAt(i);
+                ballObjects.RemoveAt(i);
             }
         }
+    }
+
+    public void SetBallObjects(BallObstacle script)
+    {
+        ballObjects.Add(script);
     }
 }

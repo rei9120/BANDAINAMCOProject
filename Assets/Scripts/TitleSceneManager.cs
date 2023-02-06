@@ -10,7 +10,6 @@ public class TitleSceneManager : MonoBehaviour
     [SerializeField] private GameObject fade;
     [SerializeField] private GameObject option;
     [SerializeField] private TextManager textScript;
-    private OptionManager optionScript;
     private FadeManager fadeScript;
     private Image fadeImage;
     private Color fadeColor;
@@ -24,7 +23,6 @@ public class TitleSceneManager : MonoBehaviour
         fadeImage = fade.GetComponent<Image>();
         fadeColor = fadeImage.color;
         fadeScript = fade.GetComponent<FadeManager>();
-        optionScript = option.GetComponent<OptionManager>();
         textScript.Init();
     }
 
@@ -58,10 +56,6 @@ public class TitleSceneManager : MonoBehaviour
     Application.Quit();//ゲームプレイ終了
 #endif
             }
-        }
-        else
-        {
-            optionScript.ManagedUpdate();
         }
 
         if (textScript.GetGameStartFlag() || sceneFlag)

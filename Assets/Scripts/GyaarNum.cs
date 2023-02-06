@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class GyaarNum : MonoBehaviour
 {
@@ -20,6 +21,10 @@ public class GyaarNum : MonoBehaviour
 
     public void ManagedUpdate()
     {
+        if(legionScript.GetNowLegionNum() == 0)
+        {
+            SceneManager.LoadScene("Title");
+        }
         num = legionScript.GetNowLegionNum().ToString();
         tmPro.text = num;
     }
